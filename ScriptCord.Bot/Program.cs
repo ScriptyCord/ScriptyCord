@@ -23,8 +23,8 @@ namespace ScriptCord.Bot
                 // TODO: This below could go into the constructor perhaps once the logging is moved to a class
                 scope.Resolve<CommandService>().Log += LogAsync;
 
-                //await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("token"));
-                await client.LoginAsync(TokenType.Bot, "NDgxODkyNjIzMDgzMzcyNTQ0.GdnlGB.RzfEFT8pFFMbAz7E95NLpANo4ZtYrtSNKUKWRk");
+                // Do not accidentally upload an API token ;) 
+                await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("token"));
                 await Task.Delay(Timeout.Infinite);
             }
         }
