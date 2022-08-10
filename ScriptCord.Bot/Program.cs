@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -8,15 +9,17 @@ namespace ScriptCord.Bot
 { 
     class Bot
     {
+        private IContainer Container { get; set; }
+
         public static void Main(string[] args)
             => new Bot().MainAsync().GetAwaiter().GetResult();
 
         public async Task MainAsync()
         {
-            using (var container = SetupAutofac())
-            {
-                var scope = container.BeginLifetimeScope();
+            Container = SetupAutofac();
 
+            using (var scope = Container.BeginLifetimeScope())
+            {
                 var client = scope.Resolve<DiscordSocketClient>();
                 client.Log += LogAsync;
 
@@ -24,7 +27,10 @@ namespace ScriptCord.Bot
                 scope.Resolve<CommandService>().Log += LogAsync;
 
                 // Do not accidentally upload an API token ;) 
-                await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("token"));
+                await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("token"), true);
+                await client.StartAsync();
+
+                await scope.Resolve<ICommandHandlingService>().InitializeAsync();
                 await Task.Delay(Timeout.Infinite);
             }
         }
@@ -33,12 +39,13 @@ namespace ScriptCord.Bot
         {
             var builder = new ContainerBuilder();
 
-            builder.RegisterType<DiscordSocketClient>().As<DiscordSocketClient>();
-            builder.RegisterType<CommandService>().As<CommandService>();
+            builder.RegisterType<AutofacServiceProvider>().As<IServiceProvider>();
+            builder.RegisterType<DiscordSocketClient>().As<DiscordSocketClient>().SingleInstance();
+            builder.RegisterType<CommandService>().As<CommandService>().SingleInstance();
             builder.RegisterType<HttpClient>().As<HttpClient>();
 
             builder.RegisterType<TestingModule>().As<TestingModule>();
-            builder.RegisterType<CommandHandlingService>().As<CommandHandlingService>();
+            builder.RegisterType<CommandHandlingService>().As<ICommandHandlingService>();
             return builder.Build();
         }
 

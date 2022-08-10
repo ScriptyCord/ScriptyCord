@@ -4,12 +4,20 @@ using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ScriptCord.Bot
 {
-    internal class CommandHandlingService
+    public interface ICommandHandlingService
+    {
+        Task InitializeAsync();
+        Task MessageReceivedAsync(SocketMessage rawMessage);
+        Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result);
+    }
+
+    public class CommandHandlingService : ICommandHandlingService
     {
         private readonly CommandService _commands;
         private readonly DiscordSocketClient _discord;
@@ -24,6 +32,9 @@ namespace ScriptCord.Bot
             _commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;
         }
+
+        public async Task InitializeAsync()
+            => await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
 
         public async Task MessageReceivedAsync(SocketMessage rawMessage)
         {

@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="6.4.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="AutoMapper" Version="11.0.1" />
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="Discord.Net.Commands" Version="3.7.2" />

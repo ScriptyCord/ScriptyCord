@@ -7,7 +7,17 @@ using System.Threading.Tasks;
 
 namespace ScriptCord.Bot.Commands
 {
-    public class TestingModule : ModuleBase<SocketCommandContext>
+    public interface ITestingModule
+    {
+        /// <summary>
+        /// Responds to a "ping" message with a "pong".
+        /// Used for checking bot availability
+        /// </summary>
+        /// <returns></returns>
+        public Task PingAsync();
+    }
+    
+    public class TestingModule : ModuleBase<SocketCommandContext>, ITestingModule
     {
         [Command("ping")]
         [Alias("pong", "hello")]
