@@ -1,4 +1,4 @@
-﻿using Discord.Commands;
+﻿using Discord.Interactions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,26 +7,20 @@ using System.Threading.Tasks;
 
 namespace ScriptCord.Bot.Commands
 {
-    public interface ITestingModule
+    public class TestingModule : InteractionModuleBase<SocketInteractionContext>
     {
-        /// <summary>
-        /// Responds to a "ping" message with a "pong".
-        /// Used for checking bot availability
-        /// </summary>
-        /// <returns></returns>
-        public Task PingAsync();
-    }
-    
-    public class TestingModule : ModuleBase<SocketCommandContext>, ITestingModule
-    {
-        private readonly ILoggerFacade<TestingModule> _logger;
+        private readonly InteractionService _commands;
 
-        public TestingModule(ILoggerFacade<TestingModule> loggerFacade)
-            => _logger = loggerFacade;
+        private readonly InteractionHandler _handler;
 
-        [Command("ping")]
-        [Alias("pong", "hello")]
-        public Task PingAsync()
-            => ReplyAsync("Pong!");
+        public TestingModule(InteractionService commands, InteractionHandler handler)
+        {
+            _commands = commands;
+            _handler = handler;
+        }
+
+        [SlashCommand("echo", "Echo an input")]
+        public async Task Echo(string echo, [Summary(description: "mention the user")] bool mention = false)
+            => await RespondAsync(echo + (mention ? Context.User.Mention : string.Empty));
     }
 }
