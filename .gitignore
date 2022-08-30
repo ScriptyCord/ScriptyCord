@@ -74,4 +74,4 @@ _[Ss]cripts
 *.ncrunchsolution
 *.dot[Cc]over
 # development files
-ScriptCord.Bot/appsettings.*.json
+ScriptCord.*/appsettings.*.json
