@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,7 +8,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="appsettings.dev.json" />
+    <None Remove="appsettings.json" />
+    <None Remove="appsettings.prod.json" />
+    <None Remove="appsettings.qa.json" />
     <None Remove="Core\20220830-initial-script.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.dev.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="appsettings.prod.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="appsettings.qa.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
