@@ -12,7 +12,8 @@
     <None Remove="appsettings.json" />
     <None Remove="appsettings.prod.json" />
     <None Remove="appsettings.qa.json" />
-    <None Remove="Core\20220830-initial-script.sql" />
+    <None Remove="Core\202208300800-initial-script.sql" />
+    <None Remove="Test\202208312050-initial-script.sql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,13 +32,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Core\20220830-initial-script.sql">
+    <EmbeddedResource Include="Core\202208300800-initial-script.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Test\" />
+    <EmbeddedResource Include="Test\202208312050-initial-script.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
