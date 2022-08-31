@@ -24,6 +24,8 @@ namespace ScriptCord.Bot
             var config = SetupConfiguration();
             SetupLogging();
             _ioc = new IocSetup(config);
+            _ioc.SetupRepositories(config);
+            _ioc.SetupServices();
             _ioc.SetupCommandModules();
         }
 
