@@ -63,6 +63,7 @@ namespace ScriptCord.Bot
 
                 if (!result.IsSuccess)
                 {
+                    _logger.Log(NLog.LogLevel.Error, $"[GuildId({context.Guild.Id}),ChannelId({context.Channel.Id})] error while executing command: {result.ErrorReason}");
                     switch (result.Error)
                     {
                         case InteractionCommandError.UnmetPrecondition:

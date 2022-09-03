@@ -23,7 +23,7 @@ namespace ScriptCord.Bot.Commands
         public async Task Ban([Summary(description: "User that will be affected by this command")] IGuildUser user, [Summary(description: "Reason for this action")] string reason = "")
         {
             await user.BanAsync(0, reason);
-            _logger.LogDebug($"[GuildId({user.Guild.Id})]: user {user.Nickname} has been banned from the server with '{reason}' reason");
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: user {user.Nickname} has been banned from the server with '{reason}' reason");
             await RespondAsync(
                 reason != null ? $"User {user.Nickname} has been banned from the server with the specified reason" : $"User {user.Nickname} has been banned from the server",
                 null, false, true
@@ -35,7 +35,7 @@ namespace ScriptCord.Bot.Commands
         public async Task Kick([Summary(description: "User that will be affected by this command")] IGuildUser user, [Summary(description: "Reason for this action")] string reason = "")
         {
             await user.KickAsync(reason);
-            _logger.LogDebug($"[GuildId({user.Guild.Id})]: user {user.Nickname} has been kicked out of the server");
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: user {user.Nickname} has been kicked out of the server");
             await RespondAsync($"User {user.Nickname} has been kicked out of the server", null, false, true);
         }
     }

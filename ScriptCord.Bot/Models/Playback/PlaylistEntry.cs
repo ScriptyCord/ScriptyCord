@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ScriptCord.Bot.Models.Playback
 {
-    [Table("playlist_entries", Schema = "scriptcord")]
+    [Table("playlist_entries", Schema = "scriptycord")]
     public class PlaylistEntry
     {
         [Column("id", Order = 0)]
