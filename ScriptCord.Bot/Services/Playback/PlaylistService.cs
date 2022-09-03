@@ -14,6 +14,7 @@ namespace ScriptCord.Bot.Services.Playback
         int CountEntriesByGuildIdAndPlaylistName(long guildId, string playlistName);
         string GetEntriesByGuildIdAndPlaylistName(long guildId, string playlistName);
         Task<IEnumerable<PlaylistListingDto>> GetPlaylistDetailsByGuildIdAsync(long guildId);
+        Task<bool> CreateNewPlaylist(long guildId, string playlistName, bool isDefault);
     }
 
     public class PlaylistService : IPlaylistService
@@ -39,16 +40,11 @@ namespace ScriptCord.Bot.Services.Playback
 
         public async Task<IEnumerable<PlaylistListingDto>> GetPlaylistDetailsByGuildIdAsync(long guildId)
         {
-            try
-            {
-                var playlists = await _playlistRepository.FindAllAsync(x => x.GuildId == guildId);
-                return playlists.Select(x => new PlaylistListingDto(x.Name, x.IsDefault, x.AdminOnly));
-            }
-            catch (Exception e)
-            {
-                _logger.LogException(e);
-                return null;
-            }
+            var playlists = await _playlistRepository.FindAllAsync(x => x.GuildId == guildId);
+            return playlists.Select(x => new PlaylistListingDto(x.Name, x.IsDefault, x.AdminOnly));
         }
+
+        public async Task<bool> CreateNewPlaylist(long guildId, string playlistName, bool isDefault)
+            => await _playlistRepository.InsertAsync(new Models.Playback.Playlist { Name = playlistName, GuildId = guildId, IsDefault = isDefault, AdminOnly = false });
     }
 }
