@@ -1,5 +1,7 @@
 ﻿using Discord.Interactions;
 using Discord.WebSocket;
+using MicroOrm.Dapper.Repositories.Config;
+using MicroOrm.Dapper.Repositories.SqlGenerator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -33,8 +35,10 @@ namespace ScriptCord.Bot
 
         public void SetupRepositories(IConfiguration config)
         {
+            MicroOrmConfig.SqlProvider = MicroOrm.Dapper.Repositories.SqlGenerator.SqlProvider.PostgreSQL;
             var connectionString = config.GetSection("ConnectionStrings").GetSection("DefaultConnection").Get<string>();
             IDbConnection db = new NpgsqlConnection(connectionString);
+            _services.AddSingleton(typeof(ISqlGenerator<>), typeof(SqlGenerator<>));
             _services.AddSingleton<IScriptCordUnitOfWork>(new ScriptCordUnitOfWork(db));
         }
 

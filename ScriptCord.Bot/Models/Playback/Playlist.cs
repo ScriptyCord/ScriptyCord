@@ -28,10 +28,11 @@ namespace ScriptCord.Bot.Models.Playback
 
         public Result Validate()
         {
-            if (Name.Length > 80)
-                return Result.Failure("Playlist name length can be only 80 characters long");
-            else if (Name == null || Name.Length == 0)
+            if (Name == null || Name.Length == 0)
                 return Result.Failure("The playlist name was not supplied");
+            else if(Name.Length > 80)
+                return Result.Failure("Playlist name length can be only 80 characters long");
+             
 
             return Result.Success();
         }

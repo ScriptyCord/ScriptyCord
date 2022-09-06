@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using YoutubeExplode;
 
 namespace ScriptCord.Bot.Commands
@@ -81,21 +82,13 @@ namespace ScriptCord.Bot.Commands
         }
 
         [SlashCommand("create-playlist", "Creates a playlist with the given name")]
-        public async Task CreatePlaylist([Summary(description: "Name of the playlist")] string name, bool defaultPlaylist = true)
+        public async Task CreatePlaylist([Summary(description: "Name of the playlist")] string name)
         {
-            var count = _playlistService.CountEntriesByGuildIdAndPlaylistName((long)Context.Guild.Id, name);
             // TODO: check if user is from "premium" users that can create multiple playlists
             var isPremiumUser = true;
 
-            if (!isPremiumUser && count > 0)
-                await RespondAsync(
-                    embed: new EmbedBuilder()
-                    .WithColor(_modulesEmbedColor)
-                    .WithTitle("playback create-playlist")
-                    .WithDescription("You cannot create more than one playlist as a non-premium user.").Build());
-
-            var result = await _playlistService.CreateNewPlaylist((long)Context.Guild.Id, name, defaultPlaylist);
-            if (result)
+            var result = await _playlistService.CreateNewPlaylist((long)Context.Guild.Id, name, isPremiumUser);
+            if (result.IsSuccess)
             {
                 await RespondAsync(
                     embed: new EmbedBuilder()
@@ -111,7 +104,40 @@ namespace ScriptCord.Bot.Commands
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
                         .WithTitle("playback create-playlist")
-                        .WithDescription($"failed to create a playlist")
+                        .WithDescription($"Failed to create a playlist: {result.Error}")
+                        .Build()
+                );
+            }
+        }
+
+        [SlashCommand("rename-playlist", "Renames the selected playlist")]
+        public async Task RenamePlaylist([Summary(description: "Old name of the playlist")] string oldName, string newName)
+        {
+            var guildUser = Context.Guild.Users.FirstOrDefault(x => x.DisplayName == Context.User.Username);
+            bool isAdmin;
+            if (guildUser == null)
+                isAdmin = false;
+            else
+                isAdmin = guildUser.GuildPermissions.Administrator;
+
+            var result = await _playlistService.RenamePlaylist((long)Context.Guild.Id, oldName, newName, isAdmin);
+            if (result.IsSuccess)
+            {
+                await RespondAsync(
+                    embed: new EmbedBuilder()
+                        .WithColor(_modulesEmbedColor)
+                        .WithTitle("playback rename-playlist")
+                        .WithDescription($"Renamed the specified playlist.")
+                        .Build()
+                );
+            }
+            else
+            {
+                await RespondAsync(
+                    embed: new EmbedBuilder()
+                        .WithColor(_modulesEmbedColor)
+                        .WithTitle("playback rename-playlist")
+                        .WithDescription($"Failed to rename the specified playlist: {result.Error}")
                         .Build()
                 );
             }
