@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using ScriptCord.Core.Persistency;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,20 +9,13 @@ using System.Threading.Tasks;
 
 namespace ScriptCord.Bot.Models.Playback
 {
-    [Table("playlist_entries", Schema = "scriptycord")]
-    public class PlaylistEntry : IModelValidation
+    public class PlaylistEntry : GuidEntity, IModelValidation
     {
-        [Column("id", Order = 0)]
-        public Guid Id { get; set; }
+        public virtual Playlist Playlist { get; set; }
 
-        [Column("playlist_id", Order = 1)]
-        public int PlaylistId { get; set; }
+        public virtual string Title { get; set; }
 
-        [Column("title", Order = 2)]
-        public string Title { get; set; }
-
-        [Column("source", Order = 3)]
-        public string Source { get; set; }
+        public virtual string Source { get; set; }
 
         public Result Validate()
         {
