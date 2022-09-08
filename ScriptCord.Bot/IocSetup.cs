@@ -56,7 +56,7 @@ namespace ScriptCord.Bot
             _services.AddSingleton(configuration);
             _services.AddSingleton<DiscordSocketClient>();
             _services.AddSingleton<InteractionHandler>();
-            _services.AddScoped(typeof(LoggerFacade<>));
+            _services.AddScoped(typeof(ILoggerFacade<>), typeof(LoggerFacade<>));
         }
 
         public void SetupRepositories(IConfiguration config)
@@ -65,6 +65,7 @@ namespace ScriptCord.Bot
             _services.AddSingleton(sessionFactory.OpenSession());
 
             _services.AddSingleton<IPlaylistRepository, PlaylistRepository>();
+            _services.AddSingleton<IPlaylistEntriesRepository, PlaylistEntriesRepository>();
 
             //_services.AddScoped(typeof(PostgreBaseRepository<>));
             //MicroOrmConfig.SqlProvider = MicroOrm.Dapper.Repositories.SqlGenerator.SqlProvider.PostgreSQL;
@@ -86,6 +87,7 @@ namespace ScriptCord.Bot
         public void SetupServices()
         {
             _services.AddScoped<IPlaylistService, PlaylistService>();
+            _services.AddScoped<IPlaylistEntriesService, PlaylistEntriesService>();
         }
 
         public void SetupCommandModules()

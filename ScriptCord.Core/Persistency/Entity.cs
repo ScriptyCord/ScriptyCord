@@ -10,7 +10,7 @@ namespace ScriptCord.Core.Persistency
 
     public abstract class LongEntity : Entity
     {
-        public virtual long Id { get; protected set; }
+        public virtual long Id { get; set; }
 
         public override bool Equals(object? obj)
         {
@@ -49,7 +49,7 @@ namespace ScriptCord.Core.Persistency
 
     public abstract class StringEntity : Entity
     {
-        public virtual string Id { get; protected set; }
+        public virtual string Id { get; set; }
 
         public override bool Equals(object? obj)
         {
@@ -90,7 +90,7 @@ namespace ScriptCord.Core.Persistency
 
     public abstract class GuidEntity : Entity
     {
-        public virtual Guid Id { get; protected set; }
+        public virtual Guid Id { get; set; }
 
         public override bool Equals(object? obj)
         {

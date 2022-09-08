@@ -19,20 +19,23 @@ namespace ScriptCord.Bot.Commands
     public class PlaybackModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkRed;
-        private readonly LoggerFacade<PlaybackModule> _logger;
-        private readonly YoutubeClient _client;
+        private readonly ILoggerFacade<PlaybackModule> _logger;
+        //private readonly YoutubeClient _client;
 
-        private IPlaylistService _playlistService;
+        private readonly IPlaylistService _playlistService;
+        private readonly IPlaylistEntriesService _playlistEntriesService;
 
-
-        public PlaybackModule(LoggerFacade<PlaybackModule> logger, IPlaylistService playlistService)
+        public PlaybackModule(ILoggerFacade<PlaybackModule> logger, IPlaylistService playlistService, IPlaylistEntriesService playlistEntriesService)
         {
             _logger = logger;
-            _client = new YoutubeClient();
+            //_client = new YoutubeClient();
+
             _playlistService = playlistService;
+            _playlistEntriesService = playlistEntriesService;
         }
 
-
+        #region PlaylistManagement
+        
         //[RequireUserPermission(ChannelPermission.Connect)]
         //[RequireUserPermission(ChannelPermission.Speak)]
         [SlashCommand("list-entries", "Lists entries of a given playlist")]
@@ -101,12 +104,10 @@ namespace ScriptCord.Bot.Commands
             }
         }
 
-        //[RequireUserPermission(ChannelPermission.Connect)]
-        //[RequireUserPermission(ChannelPermission.Speak)]
         [SlashCommand("list-playlists", "Lists playlists")]
         public async Task ListPlaylists()
         {
-            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing server's playlists");
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing guild's playlists");
             Result<IEnumerable<PlaylistListingDto>> playlistsResult = await _playlistService.GetPlaylistDetailsByGuildIdAsync((long)Context.Guild.Id);
             if (playlistsResult.IsFailure)
             {
@@ -141,6 +142,7 @@ namespace ScriptCord.Bot.Commands
         public async Task CreatePlaylist([Summary(description: "Name of the playlist")] string name)
         {
             // TODO: check if user is from "premium" users that can create multiple playlists
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Creating a playlist");
             var isPremiumUser = true;
 
             var result = await _playlistService.CreateNewPlaylist((long)Context.Guild.Id, name, isPremiumUser);
@@ -169,6 +171,7 @@ namespace ScriptCord.Bot.Commands
         [SlashCommand("rename-playlist", "Renames the selected playlist")]
         public async Task RenamePlaylist([Summary(description: "Old name of the playlist")] string oldName, string newName)
         {
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Renaming a playlist");
             var guildUser = Context.Guild.Users.FirstOrDefault(x => x.DisplayName == Context.User.Username);
             bool isAdmin;
             if (guildUser == null)
@@ -198,5 +201,34 @@ namespace ScriptCord.Bot.Commands
                 );
             }
         }
+
+        #endregion PlaylistManagement
+
+        #region EntriesManagement
+
+        [SlashCommand("add-entry", "Adds a new entry to the specified playlist")]
+        public async Task AddEntry([Summary(description: "Name of the playlist")] string playlistName, string url)
+        {
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Adding an entry to a playlist");
+            var result = await _playlistEntriesService.AddEntryFromUrlToPlaylistByName((long) Context.Guild.Id, playlistName, url);
+            EmbedBuilder builder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+
+            if (result.IsSuccess)
+            {
+                var metadata = result.Value;
+                builder.WithTitle("Success")
+                    .WithThumbnailUrl(metadata.Thumbnail)
+                    .WithDescription($"Successfully added '{metadata.Title}' from {metadata.SourceType} to '{playlistName}'.");
+            }
+            else
+            {
+                builder.WithTitle("Failure")
+                    .WithDescription($"Failed to add a new entry to the playlist: {result.Error}!");
+            }
+
+            await RespondAsync(embed: builder.Build());
+        }
+
+        #endregion EntriesManagement
     }
 }

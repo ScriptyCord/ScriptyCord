@@ -24,10 +24,10 @@ namespace ScriptCord.Bot.Services.Playback
 
     public class PlaylistService : IPlaylistService
     {
-        private readonly LoggerFacade<IPlaylistService> _logger;
+        private readonly ILoggerFacade<IPlaylistService> _logger;
         private readonly IPlaylistRepository _playlistRepository;
 
-        public PlaylistService(LoggerFacade<IPlaylistService> logger, IPlaylistRepository playlistRepository)
+        public PlaylistService(ILoggerFacade<IPlaylistService> logger, IPlaylistRepository playlistRepository)
         {
             _playlistRepository = playlistRepository;
             _logger = logger;

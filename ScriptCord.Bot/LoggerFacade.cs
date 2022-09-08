@@ -13,6 +13,11 @@ namespace ScriptCord.Bot
     {
         Task LogAsync(LogMessage message);
         void Log(LogLevel level, string log);
+        public void LogInfo(string log);
+        public void LogError(Result result);
+        public void LogException(Exception exception);
+        public void LogFatalException(Exception exception);
+        public void LogDebug(string message);
     }
 
     public class LoggerFacade<T> : ILoggerFacade<T>

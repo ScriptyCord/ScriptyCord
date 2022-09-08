@@ -11,13 +11,13 @@ namespace ScriptCord.Bot.Models.Playback
 {
     public class PlaylistEntry : GuidEntity, IModelValidation
     {
-        public virtual Playlist Playlist { get; protected set; }
+        public virtual Playlist Playlist { get; set; }
 
-        public virtual string Title { get; protected set; }
+        public virtual string Title { get; set; }
 
-        public virtual string Source { get; protected set; }
+        public virtual string Source { get; set; }
 
-        public virtual long AudioLength { get; protected set; }
+        public virtual long AudioLength { get; set; }
 
         public virtual string AudioLengthFormatted()
         {

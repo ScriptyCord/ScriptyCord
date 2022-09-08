@@ -17,7 +17,7 @@ namespace ScriptCord.Bot
                 .GetResult();
 
         private IocSetup _ioc;
-        private LoggerFacade<Program> _logger;
+        private ILoggerFacade<Program> _logger;
 
         private Program()
         {
@@ -57,7 +57,7 @@ namespace ScriptCord.Bot
             IServiceProvider services = _ioc.Build();
             var config = services.GetRequiredService<IConfiguration>();
             var client = services.GetRequiredService<DiscordSocketClient>();
-            _logger = services.GetRequiredService<LoggerFacade<Program>>();
+            _logger = services.GetRequiredService<ILoggerFacade<Program>>();
 
             client.Log += LogAsync;
 

@@ -18,9 +18,9 @@ namespace ScriptCord.Bot
         private readonly InteractionService _interactionService;
         private readonly IServiceProvider _services;
         private readonly IConfiguration _configuration;
-        private readonly LoggerFacade<InteractionHandler> _logger;
+        private readonly ILoggerFacade<InteractionHandler> _logger;
 
-        public InteractionHandler(DiscordSocketClient client, InteractionService interactionService, IServiceProvider services, IConfiguration config, LoggerFacade<InteractionHandler> logger)
+        public InteractionHandler(DiscordSocketClient client, InteractionService interactionService, IServiceProvider services, IConfiguration config, ILoggerFacade<InteractionHandler> logger)
         {
             _client = client;
             _interactionService = interactionService;

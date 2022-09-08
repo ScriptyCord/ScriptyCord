@@ -11,9 +11,9 @@ namespace ScriptCord.Bot.Commands
 {
     public class UserManagementModule : InteractionModuleBase<SocketInteractionContext>
     {
-        private readonly LoggerFacade<UserManagementModule> _logger;
+        private readonly ILoggerFacade<UserManagementModule> _logger;
 
-        public UserManagementModule(LoggerFacade<UserManagementModule> logger)
+        public UserManagementModule(ILoggerFacade<UserManagementModule> logger)
         {
             _logger = logger;
         }
