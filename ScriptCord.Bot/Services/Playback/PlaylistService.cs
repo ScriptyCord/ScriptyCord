@@ -80,7 +80,7 @@ namespace ScriptCord.Bot.Services.Playback
             countResult = await _playlistRepository.CountAsync(x => x.GuildId == guildId && x.IsDefault);
             if (countResult.IsSuccess && countResult.Value > 0)
                 isDefault = false;
-            else
+            else if (countResult.IsFailure)
             {
                 _logger.LogError(countResult);
                 return Result.Failure("Unexpected error occurred while checking if a default playlist already exists in a guild.");

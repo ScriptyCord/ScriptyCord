@@ -21,7 +21,7 @@ namespace ScriptCord.Bot.Models.Playback
 
         public virtual IList<PlaylistEntry> PlaylistEntries { get; set; } = new List<PlaylistEntry>();
 
-        public Result Validate()
+        public virtual Result Validate()
         {
             if (Name == null || Name.Length == 0)
                 return Result.Failure("The playlist name was not supplied");

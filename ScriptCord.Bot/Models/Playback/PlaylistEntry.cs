@@ -11,13 +11,13 @@ namespace ScriptCord.Bot.Models.Playback
 {
     public class PlaylistEntry : GuidEntity, IModelValidation
     {
-        public virtual Playlist Playlist { get; set; }
+        public virtual Playlist Playlist { get; protected set; }
 
-        public virtual string Title { get; set; }
+        public virtual string Title { get; protected set; }
 
-        public virtual string Source { get; set; }
+        public virtual string Source { get; protected set; }
 
-        public Result Validate()
+        public virtual Result Validate()
         {
             if (Title == null || Title.Length == 0)
                 return Result.Failure("Title was not supplied");

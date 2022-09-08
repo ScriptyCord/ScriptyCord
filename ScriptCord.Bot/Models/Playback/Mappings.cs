@@ -11,12 +11,13 @@ namespace ScriptCord.Bot.Models.Playback
     {
         public PlaylistMapping()
         {
+            Schema("scriptycord");
             Table("playlists");
-            Id(x => x.Id);
-            Map(x => x.GuildId);
-            Map(x => x.Name);
-            Map(x => x.IsDefault);
-            Map(x => x.AdminOnly);
+            Id(x => x.Id).Column("id");
+            Map(x => x.GuildId).Column("guild_id");
+            Map(x => x.Name).Column("name");
+            Map(x => x.IsDefault).Column("is_default");
+            Map(x => x.AdminOnly).Column("admin_only");
             HasMany(x => x.PlaylistEntries);
         }
     }
@@ -25,10 +26,11 @@ namespace ScriptCord.Bot.Models.Playback
     {
         public PlaylistEntriesMapping()
         {
+            Schema("scriptycord");
             Table("playlist_entries");
-            Id(x => x.Id);
-            Map(x => x.Title);
-            Map(x => x.Source);
+            Id(x => x.Id).Column("id").GeneratedBy.GuidComb();
+            Map(x => x.Title).Column("title");
+            Map(x => x.Source).Column("source");
             References(x => x.Playlist);
             //HasOne<Playlist>(x => x.Playlist.Id)
         }
