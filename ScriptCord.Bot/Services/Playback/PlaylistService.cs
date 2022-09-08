@@ -15,8 +15,8 @@ namespace ScriptCord.Bot.Services.Playback
 {
     public interface IPlaylistService
     {
-        int CountEntriesByGuildIdAndPlaylistName(long guildId, string playlistName);
-        string GetEntriesByGuildIdAndPlaylistName(long guildId, string playlistName);
+        Task<Result<Playlist>> GetPlaylistDetails(long guildId, string playlistName, bool isAdmin = false);
+        string GetEntriesByGuildIdAndPlaylistName(long guildId, string playlistName, bool isAdmin = false);
         Task<Result<IEnumerable<PlaylistListingDto>>> GetPlaylistDetailsByGuildIdAsync(long guildId);
         Task<Result> CreateNewPlaylist(long guildId, string playlistName, bool isPremiumUser = false);
         Task<Result> RenamePlaylist(long guildId, string oldPlaylistName, string newPlaylistName, bool isAdmin = false);
@@ -33,12 +33,23 @@ namespace ScriptCord.Bot.Services.Playback
             _logger = logger;
         }
 
-        public int CountEntriesByGuildIdAndPlaylistName(long guildId, string playlistName)
+        public async Task<Result<Playlist>> GetPlaylistDetails(long guildId, string playlistName, bool isAdmin = false)
         {
-            return 0;
+            var playlistResult = await _playlistRepository.GetSingleAsync(x => x.GuildId == guildId && x.Name == playlistName);
+            if (playlistResult.IsFailure && playlistResult.Value == null)
+            {
+                _logger.LogError(playlistResult);
+                return Result.Failure<Playlist>("Failed to retrieve the playlist with specified name.");
+            }
+
+            var playlist = playlistResult.Value;
+            if (playlist.AdminOnly && !isAdmin)
+                return Result.Failure<Playlist>("Only a guild administrator can access information about this playlist!");
+
+            return Result.Success(playlist);
         }
 
-        public string GetEntriesByGuildIdAndPlaylistName(long guildId, string playlistName)
+        public string GetEntriesByGuildIdAndPlaylistName(long guildId, string playlistName, bool isAdmin = false)
         {
             throw new NotImplementedException();
         }

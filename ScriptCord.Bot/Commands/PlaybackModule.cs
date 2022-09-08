@@ -39,23 +39,66 @@ namespace ScriptCord.Bot.Commands
         // [Choice("playlists", "entries")]
         public async Task ListEntries([Summary(description: "Name of the playlist")] string name)
         {
-            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing entries in {name} playlist"); 
-            var count = _playlistService.CountEntriesByGuildIdAndPlaylistName((long) Context.Guild.Id, name);
-            EmbedBuilder builder = new EmbedBuilder().WithCurrentTimestamp().WithColor(_modulesEmbedColor);
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing entries in {name} playlist");
 
-            if (count == 0)
-                builder.WithDescription($"No playlist named '{name}' was found in this server");
-            else if (count < 50)
+            // TODO: Perhaps make a BaseScriptCordModule that inherits from interactionmodulebase that has utility methods that returns if a user is an admin etc.
+            var guildUser = Context.Guild.Users.FirstOrDefault(x => x.DisplayName == Context.User.Username);
+            bool isAdmin;
+            if (guildUser == null)
+                isAdmin = false;
+            else
+                isAdmin = guildUser.GuildPermissions.Administrator;
+
+            var playlistResult = await _playlistService.GetPlaylistDetails((long)Context.Guild.Id, name, isAdmin);
+            if (playlistResult.IsFailure)
             {
-                await RespondAsync(_playlistService.GetEntriesByGuildIdAndPlaylistName((long)Context.Guild.Id, name));
-                builder.WithDescription($"Feature not fully implemented yet");
+                await RespondAsync(
+                    embed: new EmbedBuilder()
+                        .WithColor(_modulesEmbedColor)
+                        .WithTitle("playback list-entries")
+                        .WithDescription($"Failed to read playlist's data: {playlistResult.Error}")
+                        .Build()
+                );
+            }
+
+            if (playlistResult.Value.PlaylistEntries.Count == 0)
+            {
+                await RespondAsync(
+                    embed: new EmbedBuilder()
+                        .WithColor(_modulesEmbedColor)
+                        .WithTitle("playback list-entries")
+                        .WithDescription($"No entries in this playlist")
+                        .Build()
+                );
+            }
+            else if (playlistResult.Value.PlaylistEntries.Count <= 50)
+            {
+                StringBuilder sb = new StringBuilder();
+                int index = 1;
+                foreach (var pair in playlistResult.Value.PlaylistEntries.Select(x => new { Index = index, Entry = x }))
+                {
+                    sb.Append($"{pair.Index}: {pair.Entry.Title}");
+                    index++;
+                }
+                await RespondAsync(
+                    embed: new EmbedBuilder()
+                        .WithColor(_modulesEmbedColor)
+                        .WithTitle("playback list-entries")
+                        .WithDescription(sb.ToString())
+                        .Build()
+                );
             }
             else
             {
-                builder.WithDescription($"Feature not fully implemented yet");
+                await RespondAsync(
+                    // TODO: File export with embed
+                    embed: new EmbedBuilder()
+                        .WithColor(_modulesEmbedColor)
+                        .WithTitle("playback list-entries")
+                        .WithDescription("Too many entries in the playlist! In the future a file with entries will be appended.")
+                        .Build()
+                );
             }
-
-            await RespondAsync(embed: builder.Build());
         }
 
         //[RequireUserPermission(ChannelPermission.Connect)]

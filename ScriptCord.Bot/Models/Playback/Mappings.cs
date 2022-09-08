@@ -18,7 +18,7 @@ namespace ScriptCord.Bot.Models.Playback
             Map(x => x.Name).Column("name");
             Map(x => x.IsDefault).Column("is_default");
             Map(x => x.AdminOnly).Column("admin_only");
-            HasMany(x => x.PlaylistEntries);
+            HasMany(x => x.PlaylistEntries).Cascade.SaveUpdate();
         }
     }
 
