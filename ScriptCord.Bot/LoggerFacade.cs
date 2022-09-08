@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using CSharpFunctionalExtensions;
+using Discord;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -59,6 +60,9 @@ namespace ScriptCord.Bot
 
         public void LogInfo(string log)
             => _logger.Log(NLog.LogLevel.Info, log);
+
+        public void LogError(Result result)
+            => _logger.Log(NLog.LogLevel.Error, result.Error);
 
         public void LogException(Exception exception)
             => _logger.Log(NLog.LogLevel.Error, exception);

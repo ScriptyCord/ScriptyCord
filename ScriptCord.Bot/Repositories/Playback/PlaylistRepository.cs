@@ -1,15 +1,16 @@
-﻿using MicroOrm.Dapper.Repositories;
+﻿using NHibernate;
 using ScriptCord.Bot.Models.Playback;
+using ScriptCord.Core.Persistency;
 using System.Data;
 
 namespace ScriptCord.Bot.Repositories.Playback
 {
-    public interface IPlaylistRepository : IDapperRepository<Playlist>
+    public interface IPlaylistRepository : IRepository<Playlist>
     {
     }
 
-    public class PlaylistRepository : DapperRepository<Playlist>, IPlaylistRepository
+    public class PlaylistRepository : PostgreBaseRepository<Playlist>, IPlaylistRepository
     {
-        public PlaylistRepository(IDbConnection connection) : base(connection) {}
+        public PlaylistRepository(ISession session) : base(session) {}
     }
 }

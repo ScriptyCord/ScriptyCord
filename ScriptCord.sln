@@ -5,7 +5,9 @@ VisualStudioVersion = 17.3.32804.467
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScriptCord.Bot", "ScriptCord.Bot\ScriptCord.Bot.csproj", "{DAEE4E77-C885-49CC-BEB4-3791FB707E50}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptCord.Migrations", "ScriptCord.Migrations\ScriptCord.Migrations.csproj", "{2D17A329-9915-4A7B-AA49-87E7D4BE16D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScriptCord.Migrations", "ScriptCord.Migrations\ScriptCord.Migrations.csproj", "{2D17A329-9915-4A7B-AA49-87E7D4BE16D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptCord.Core", "ScriptCord.Core\ScriptCord.Core.csproj", "{0257AC4E-531B-4762-A106-0757DD51DF64}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{2D17A329-9915-4A7B-AA49-87E7D4BE16D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D17A329-9915-4A7B-AA49-87E7D4BE16D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D17A329-9915-4A7B-AA49-87E7D4BE16D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0257AC4E-531B-4762-A106-0757DD51DF64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0257AC4E-531B-4762-A106-0757DD51DF64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0257AC4E-531B-4762-A106-0757DD51DF64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0257AC4E-531B-4762-A106-0757DD51DF64}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

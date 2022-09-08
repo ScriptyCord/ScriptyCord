@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="CSharpFunctionalExtensions" Version="2.33.2" />
+    <PackageReference Include="NHibernate" Version="5.3.13" />
+  </ItemGroup>
+
 </Project>

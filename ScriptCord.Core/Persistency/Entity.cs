@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace ScriptCord.Core.Persistency
 {
-    public abstract class LongEntity
+    public abstract class Entity { }
+
+    public abstract class LongEntity : Entity
     {
         public virtual long Id { get; protected set; }
 
@@ -45,7 +47,7 @@ namespace ScriptCord.Core.Persistency
             => (GetType().ToString() + Id).GetHashCode();
     }
 
-    public abstract class StringEntity
+    public abstract class StringEntity : Entity
     {
         public virtual string Id { get; protected set; }
 
@@ -86,7 +88,7 @@ namespace ScriptCord.Core.Persistency
             => (GetType().ToString() + Id).GetHashCode();
     }
 
-    public abstract class GuidEntity
+    public abstract class GuidEntity : Entity
     {
         public virtual Guid Id { get; protected set; }
 

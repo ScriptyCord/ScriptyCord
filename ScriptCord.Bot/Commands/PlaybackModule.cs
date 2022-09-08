@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using CSharpFunctionalExtensions;
+using Discord;
 using Discord.Interactions;
 using ScriptCord.Bot.Dto.Playback;
 using ScriptCord.Bot.Repositories;
@@ -63,7 +64,19 @@ namespace ScriptCord.Bot.Commands
         public async Task ListPlaylists()
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing server's playlists");
-            IEnumerable<PlaylistListingDto> playlists = await _playlistService.GetPlaylistDetailsByGuildIdAsync((long)Context.Guild.Id);
+            Result<IEnumerable<PlaylistListingDto>> playlistsResult = await _playlistService.GetPlaylistDetailsByGuildIdAsync((long)Context.Guild.Id);
+            if (playlistsResult.IsFailure)
+            {
+                await RespondAsync(embed: new EmbedBuilder()
+                     .WithTitle($"{Context.Guild.Name}'s Playlists")
+                     .WithColor(_modulesEmbedColor)
+                     .WithDescription(playlistsResult.Error)
+                     .WithCurrentTimestamp().Build()
+                 );
+                return;
+            }
+
+            IEnumerable<PlaylistListingDto> playlists = playlistsResult.Value;
             StringBuilder sb = new StringBuilder();
             int count = 1;
             foreach(var playlist in playlists)

@@ -5,6 +5,7 @@ using ScriptCord.Bot.Repositories;
 using ScriptCord.Bot.Repositories.Playback;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -16,7 +17,7 @@ namespace ScriptCord.Bot.Services.Playback
     {
         int CountEntriesByGuildIdAndPlaylistName(long guildId, string playlistName);
         string GetEntriesByGuildIdAndPlaylistName(long guildId, string playlistName);
-        Task<IEnumerable<PlaylistListingDto>> GetPlaylistDetailsByGuildIdAsync(long guildId);
+        Task<Result<IEnumerable<PlaylistListingDto>>> GetPlaylistDetailsByGuildIdAsync(long guildId);
         Task<Result> CreateNewPlaylist(long guildId, string playlistName, bool isPremiumUser = false);
         Task<Result> RenamePlaylist(long guildId, string oldPlaylistName, string newPlaylistName, bool isAdmin = false);
     }
@@ -26,9 +27,9 @@ namespace ScriptCord.Bot.Services.Playback
         private readonly LoggerFacade<IPlaylistService> _logger;
         private readonly IPlaylistRepository _playlistRepository;
 
-        public PlaylistService(LoggerFacade<IPlaylistService> logger, IScriptCordUnitOfWork uow)
+        public PlaylistService(LoggerFacade<IPlaylistService> logger, IPlaylistRepository playlistRepository)
         {
-            _playlistRepository = uow.PlaylistRepository;
+            _playlistRepository = playlistRepository;
             _logger = logger;
         }
 
@@ -42,23 +43,48 @@ namespace ScriptCord.Bot.Services.Playback
             throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<PlaylistListingDto>> GetPlaylistDetailsByGuildIdAsync(long guildId)
+        public async Task<Result<IEnumerable<PlaylistListingDto>>> GetPlaylistDetailsByGuildIdAsync(long guildId)
         {
-            var playlists = await _playlistRepository.FindAllAsync(x => x.GuildId == guildId);
-            return playlists.Select(x => new PlaylistListingDto(x.Name, x.IsDefault, x.AdminOnly));
+            var result = await _playlistRepository.GetFiltered(x => x.GuildId == guildId);
+            if (result.IsFailure)
+            {
+                _logger.LogError(result);
+                return Result.Failure<IEnumerable<PlaylistListingDto>>("Unexpected error occurred while adding the playlist.");
+            }
+
+            var playlists = result.Value;
+            return Result.Success(playlists.Select(x => new PlaylistListingDto(x.Name, x.IsDefault, x.AdminOnly)));
         }
 
         public async Task<Result> CreateNewPlaylist(long guildId, string playlistName, bool isPremiumUser = false)
         {
-            if (await _playlistRepository.CountAsync(x => x.GuildId == guildId && x.Name == playlistName) != 0)
+            var countResult = await _playlistRepository.CountAsync(x => x.GuildId == guildId && x.Name == playlistName);
+            if (countResult.IsSuccess && countResult.Value != 0)
                 return Result.Failure("A playlist with the chosen name already exists in this server!");
+            else if (countResult.IsFailure)
+            {
+                _logger.LogError(countResult);
+                return Result.Failure("Unexpected error occurred while counting playlists of given name in guild.");
+            }
 
-            if (await _playlistRepository.CountAsync(x => x.GuildId == guildId) > 0 && !isPremiumUser)
+            countResult = await _playlistRepository.CountAsync(x => x.GuildId == guildId);
+            if (countResult.IsSuccess && countResult.Value > 0 && !isPremiumUser)
                 return Result.Failure("Non-premium users can't create more than one playlist in a server!");
+            else if (countResult.IsFailure)
+            {
+                _logger.LogError(countResult);
+                return Result.Failure("Unexpected error occurred while counting playlists in a guild.");
+            }
 
             bool isDefault = true;
-            if (await _playlistRepository.CountAsync(x => x.GuildId == guildId && x.IsDefault) > 0)
+            countResult = await _playlistRepository.CountAsync(x => x.GuildId == guildId && x.IsDefault);
+            if (countResult.IsSuccess && countResult.Value > 0)
                 isDefault = false;
+            else
+            {
+                _logger.LogError(countResult);
+                return Result.Failure("Unexpected error occurred while checking if a default playlist already exists in a guild.");
+            }
 
             // TODO: If the user is not premium, he shouldn't be able to create more than one playlist instance
 
@@ -67,17 +93,35 @@ namespace ScriptCord.Bot.Services.Playback
             if (validationResult.IsFailure)
                 return validationResult;
 
-            var result = await _playlistRepository.InsertAsync(new Models.Playback.Playlist { Name = playlistName, GuildId = guildId, IsDefault = isDefault, AdminOnly = false });
-            return result ? Result.Success() : Result.Failure("Unexpected error occurred while adding the playlist.");
+            var result = await _playlistRepository.SaveAsync(model);
+            if (result.IsFailure)
+            {
+                _logger.LogError(result);
+                return Result.Failure("Unexpected error occurred while creating new playlist.");
+            }
+
+            return result;
         }
     
         public async Task<Result> RenamePlaylist(long guildId, string oldPlaylistName, string newPlaylistName, bool isAdmin = false)
         {
-            if (await _playlistRepository.CountAsync(x => x.GuildId == guildId && x.Name == newPlaylistName) != 0)
+            var countResult = await _playlistRepository.CountAsync(x => x.GuildId == guildId && x.Name == newPlaylistName);
+            if (countResult.IsSuccess && countResult.Value != 0)
                 return Result.Failure("A playlist with the chosen name already exists in this server!");
+            else if (countResult.IsFailure)
+            {
+                _logger.LogError(countResult);
+                return Result.Failure("Unexpected error occurred while counting playlists of given name in guild.");
+            }
             
-            
-            var model = await _playlistRepository.FindAsync(x => x.GuildId == guildId && x.Name == oldPlaylistName);
+            var modelResult = await _playlistRepository.GetSingleAsync(x => x.GuildId == guildId && x.Name == oldPlaylistName);
+            if (modelResult.IsFailure)
+            {
+                _logger.LogError(modelResult);
+                return Result.Failure("Unexpected error occurred while creating new playlist.");
+            }
+
+            var model = modelResult.Value;
             model.Name = newPlaylistName;
 
             var validationResult = model.Validate();
@@ -88,7 +132,13 @@ namespace ScriptCord.Bot.Services.Playback
                 return Result.Failure("You must be an admin in order to perform this action.");
 
             var result = await _playlistRepository.UpdateAsync(model);
-            return result ? Result.Success() : Result.Failure("Unexpected error occurred while renaming the playlist.");
+            if (result.IsFailure)
+            {
+                _logger.LogError(modelResult);
+                return Result.Failure("Unexpected error occurred while updating the playlist entry.");
+            }
+
+            return result;
         }
     }
 }
