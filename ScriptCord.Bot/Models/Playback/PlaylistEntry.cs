@@ -17,6 +17,20 @@ namespace ScriptCord.Bot.Models.Playback
 
         public virtual string Source { get; protected set; }
 
+        public virtual long AudioLength { get; protected set; }
+
+        public virtual string AudioLengthFormatted()
+        {
+            TimeSpan t = TimeSpan.FromMilliseconds(AudioLength);
+            string intervalString = null;
+            if (AudioLength >= 60)
+                intervalString = t.ToString(@"mm\:ss\:fff");
+            else
+                intervalString = t.ToString(@"ss\:fff");
+
+            return intervalString;
+        }
+
         public virtual Result Validate()
         {
             if (Title == null || Title.Length == 0)

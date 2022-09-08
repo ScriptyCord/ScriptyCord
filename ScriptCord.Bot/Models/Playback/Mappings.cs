@@ -31,6 +31,7 @@ namespace ScriptCord.Bot.Models.Playback
             Id(x => x.Id).Column("id").GeneratedBy.GuidComb();
             Map(x => x.Title).Column("title");
             Map(x => x.Source).Column("source");
+            Map(x => x.AudioLength).Column("audio_length");
             References(x => x.Playlist);
             //HasOne<Playlist>(x => x.Playlist.Id)
         }

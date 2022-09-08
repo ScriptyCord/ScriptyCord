@@ -77,7 +77,7 @@ namespace ScriptCord.Bot.Commands
                 int index = 1;
                 foreach (var pair in playlistResult.Value.PlaylistEntries.Select(x => new { Index = index, Entry = x }))
                 {
-                    sb.Append($"{pair.Index}: {pair.Entry.Title}");
+                    sb.AppendLine($"**{pair.Index}**. '{pair.Entry.Title}' from {pair.Entry.Source} ({pair.Entry.AudioLengthFormatted()})");
                     index++;
                 }
                 await RespondAsync(

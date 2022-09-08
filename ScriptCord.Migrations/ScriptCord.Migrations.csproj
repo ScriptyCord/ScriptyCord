@@ -13,6 +13,7 @@
     <None Remove="appsettings.prod.json" />
     <None Remove="appsettings.qa.json" />
     <None Remove="Core\202208300800-initial-script.sql" />
+    <None Remove="Core\202209081855-extend-playlist-entries.sql" />
     <None Remove="Test\202208312050-initial-script.sql" />
   </ItemGroup>
 
@@ -33,6 +34,9 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Core\202208300800-initial-script.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Core\202209081855-extend-playlist-entries.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Test\202208312050-initial-script.sql">

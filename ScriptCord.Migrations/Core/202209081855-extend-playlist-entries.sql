@@ -1,0 +1,1 @@
+﻿alter table scriptycord.playlist_entries add audio_length bigint not null default 1;
