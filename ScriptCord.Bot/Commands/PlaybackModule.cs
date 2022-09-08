@@ -58,7 +58,7 @@ namespace ScriptCord.Bot.Commands
                 await RespondAsync(
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
-                        .WithTitle("playback list-entries")
+                        .WithTitle("Failure")
                         .WithDescription($"Failed to read playlist's data: {playlistResult.Error}")
                         .Build()
                 );
@@ -69,7 +69,7 @@ namespace ScriptCord.Bot.Commands
                 await RespondAsync(
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
-                        .WithTitle("playback list-entries")
+                        .WithTitle($"{name} entries")
                         .WithDescription($"No entries in this playlist")
                         .Build()
                 );
@@ -86,7 +86,7 @@ namespace ScriptCord.Bot.Commands
                 await RespondAsync(
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
-                        .WithTitle("playback list-entries")
+                        .WithTitle($"{name} entries")
                         .WithDescription(sb.ToString())
                         .Build()
                 );
@@ -97,7 +97,7 @@ namespace ScriptCord.Bot.Commands
                     // TODO: File export with embed
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
-                        .WithTitle("playback list-entries")
+                        .WithTitle($"{name} entries")
                         .WithDescription("Too many entries in the playlist! In the future a file with entries will be appended.")
                         .Build()
                 );
@@ -151,7 +151,7 @@ namespace ScriptCord.Bot.Commands
                 await RespondAsync(
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
-                        .WithTitle("playback create-playlist")
+                        .WithTitle("Success")
                         .WithDescription($"Created a new playlist called {name}.")
                         .Build()
                 );
@@ -161,7 +161,7 @@ namespace ScriptCord.Bot.Commands
                 await RespondAsync(
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
-                        .WithTitle("playback create-playlist")
+                        .WithTitle("Failure")
                         .WithDescription($"Failed to create a playlist: {result.Error}")
                         .Build()
                 );
@@ -185,7 +185,7 @@ namespace ScriptCord.Bot.Commands
                 await RespondAsync(
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
-                        .WithTitle("playback rename-playlist")
+                        .WithTitle("Success")
                         .WithDescription($"Renamed the specified playlist.")
                         .Build()
                 );
@@ -195,7 +195,7 @@ namespace ScriptCord.Bot.Commands
                 await RespondAsync(
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
-                        .WithTitle("playback rename-playlist")
+                        .WithTitle("Failure")
                         .WithDescription($"Failed to rename the specified playlist: {result.Error}")
                         .Build()
                 );
