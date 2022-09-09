@@ -56,6 +56,7 @@ namespace ScriptCord.Bot
             _services.AddSingleton(configuration);
             _services.AddSingleton<DiscordSocketClient>();
             _services.AddSingleton<InteractionHandler>();
+            _services.AddSingleton(configuration);
             _services.AddScoped(typeof(ILoggerFacade<>), typeof(LoggerFacade<>));
         }
 

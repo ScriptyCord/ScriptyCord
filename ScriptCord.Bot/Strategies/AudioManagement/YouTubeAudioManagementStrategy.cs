@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Configuration;
 using ScriptCord.Bot.Dto.Playback;
 using ScriptCord.Bot.Models.Playback;
 using System;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YoutubeExplode;
+using YoutubeExplode.Converter;
 
 namespace ScriptCord.Bot.Strategies.AudioManagement
 {
@@ -14,12 +16,30 @@ namespace ScriptCord.Bot.Strategies.AudioManagement
     {
         private readonly YoutubeClient _client;
 
-        public YouTubeAudioManagementStrategy()
-            => _client = new YoutubeClient();
+        private readonly IConfiguration _configuration;
 
-        public Result DownloadAudioFromUrl(string url)
+        public YouTubeAudioManagementStrategy(IConfiguration configuration)
+        { 
+            _client = new YoutubeClient();
+            _configuration = configuration;
+        }
+
+        public async Task<Result> DownloadAudio(AudioMetadataDto metadata)
         {
-            return Result.Failure("");
+            var filename = GenerateFileNameFromModel(metadata);
+            var baseFolder = _configuration.GetSection("store").GetValue<string>("audioPath");
+            var targetFilename = $"{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("defaultAudioExtension")}";
+            var temporaryFilename = $"{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("temporaryExtension")}";
+            try
+            {
+                await _client.Videos.DownloadAsync(metadata.Url, targetFilename);
+            }
+            catch (Exception e)
+            {
+                return Result.Failure(e.Message);
+            }
+
+            return Result.Success();
         }
 
         public async Task<AudioMetadataDto> ExtractMetadataFromUrl(string url)
@@ -28,15 +48,15 @@ namespace ScriptCord.Bot.Strategies.AudioManagement
             return new AudioMetadataDto
             {
                 Title = video.Title,
-                AudioLength = (long)video.Duration.Value.TotalSeconds,
+                AudioLength = (long)video.Duration.Value.TotalMilliseconds,
                 Thumbnail = video.Thumbnails.OrderByDescending(x => x.Resolution.Width * x.Resolution.Height).First().Url,
-                SourceType = AudioSourceType.YouTube
+                SourceType = AudioSourceType.YouTube,
+                SourceId = video.Id,
+                Url = url
             };
         }
 
-        public string GenerateFileNameFromModel(PlaylistEntry entry)
-        {
-            return "";
-        }
+        public string GenerateFileNameFromModel(AudioMetadataDto metadata)
+            => $"{metadata.SourceType}-{metadata.SourceId}";
     }
 }

@@ -15,5 +15,9 @@ namespace ScriptCord.Bot.Dto.Playback
         public string Thumbnail { get; set; }
 
         public string SourceType { get; set; }
+
+        public string SourceId { get; set; }
+
+        public string Url { get; set; }
     }
 }

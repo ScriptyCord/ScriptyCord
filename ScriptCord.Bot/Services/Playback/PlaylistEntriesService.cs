@@ -1,5 +1,6 @@
 ﻿using AngleSharp.Dom;
 using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Configuration;
 using ScriptCord.Bot.Dto.Playback;
 using ScriptCord.Bot.Models.Playback;
 using ScriptCord.Bot.Repositories.Playback;
@@ -14,33 +15,58 @@ namespace ScriptCord.Bot.Services.Playback
 {
     public interface IPlaylistEntriesService
     {
-        Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(long guildId, string playlist, string url);
+        Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(long guildId, string playlistName, string url);
     }
 
     public class PlaylistEntriesService : IPlaylistEntriesService
     {
         private readonly IPlaylistEntriesRepository _playlistEntriesRepository;
+        private readonly IPlaylistRepository _playlistRepository;
         private readonly ILoggerFacade<IPlaylistEntriesService> _logger;
+        private readonly IConfiguration _configuration;
 
-        public PlaylistEntriesService(ILoggerFacade<IPlaylistEntriesService> logger, IPlaylistEntriesRepository playlistEntriesRepository)
+        public PlaylistEntriesService(ILoggerFacade<IPlaylistEntriesService> logger, IPlaylistRepository playlistRepository, IPlaylistEntriesRepository playlistEntriesRepository, IConfiguration configuration)
         {
             _playlistEntriesRepository = playlistEntriesRepository;
+            _playlistRepository = playlistRepository;
             _logger = logger;
+            _configuration = configuration;
         }
 
-        public async Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(long guildId, string playlist, string url)
+        public async Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(long guildId, string playlistName, string url)
         {
+            var playlistResult = await _playlistRepository.GetSingleAsync(x => x.GuildId == guildId && x.Name == playlistName);
+            if (playlistResult.IsFailure)
+            {
+                _logger.LogError(playlistResult);
+                return Result.Failure<AudioMetadataDto>($"Unable to find playlist named {playlistName}");
+            }
+            var playlist = playlistResult.Value;
+
             Result<IAudioManagementStrategy> strategyResult = GetSuitableStrategy(url);
             if (strategyResult.IsFailure)
                 return Result.Failure<AudioMetadataDto>(strategyResult.Error);
-
             IAudioManagementStrategy strategy = strategyResult.Value;
-
             AudioMetadataDto metadata = await strategy.ExtractMetadataFromUrl(url);
-            PlaylistEntry newEntry = new PlaylistEntry { Playlist = new Playlist { Id = guildId }, Title = metadata.Title, Source = metadata.SourceType, AudioLength = metadata.AudioLength };
-            var filename = strategy.GenerateFileNameFromModel(newEntry);
 
-            // TODO save to disk and only continue if successfull
+            if (playlist.PlaylistEntries.Count(x => x.SourceIdentifier == metadata.SourceId) > 0)
+                return Result.Success(metadata);
+            
+            PlaylistEntry newEntry = new PlaylistEntry { Playlist = playlist, Title = metadata.Title, Source = metadata.SourceType, AudioLength = metadata.AudioLength };
+
+            Result audioDownloadResult = await strategy.DownloadAudio(metadata);
+            if (audioDownloadResult.IsFailure)
+            {
+                _logger.LogError(audioDownloadResult);
+                return Result.Failure<AudioMetadataDto>(audioDownloadResult.Error);
+            }
+
+            var result = await _playlistEntriesRepository.SaveAsync(newEntry);
+            if (result.IsFailure)
+            {
+                _logger.LogError(result);
+                return Result.Failure<AudioMetadataDto>(result.Error);
+            }
 
             return Result.Success(metadata);
         }
@@ -49,7 +75,7 @@ namespace ScriptCord.Bot.Services.Playback
         {
             IAudioManagementStrategy audioManagementStrategy = null;
             if (url.Contains("youtube") || url.Contains("youtu.be")) // TODO: Better pattern matching
-                audioManagementStrategy = new YouTubeAudioManagementStrategy();
+                audioManagementStrategy = new YouTubeAudioManagementStrategy(_configuration);
             else
             {
                 _logger.LogDebug($"No suitable strategy was found for url: {url}");

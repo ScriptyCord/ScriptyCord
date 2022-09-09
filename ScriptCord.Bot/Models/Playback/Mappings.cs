@@ -32,7 +32,7 @@ namespace ScriptCord.Bot.Models.Playback
             Map(x => x.Title).Column("title");
             Map(x => x.Source).Column("source");
             Map(x => x.AudioLength).Column("audio_length");
-            References(x => x.Playlist);
+            References(x => x.Playlist).Cascade.SaveUpdate();
             //HasOne<Playlist>(x => x.Playlist.Id)
         }
     }

@@ -17,6 +17,8 @@ namespace ScriptCord.Bot.Models.Playback
 
         public virtual string Source { get; set; }
 
+        public virtual string SourceIdentifier { get; set; }
+
         public virtual long AudioLength { get; set; }
 
         public virtual string AudioLengthFormatted()
