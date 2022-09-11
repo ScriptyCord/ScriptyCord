@@ -109,7 +109,7 @@ namespace ScriptCord.Bot.Commands
         public async Task ListPlaylists()
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing guild's playlists");
-            Result<IEnumerable<PlaylistListingDto>> playlistsResult = await _playlistService.GetPlaylistDetailsByGuildIdAsync((long)Context.Guild.Id);
+            Result<IEnumerable<LightPlaylistListingDto>> playlistsResult = await _playlistService.GetPlaylistDetailsByGuildIdAsync((long)Context.Guild.Id);
             if (playlistsResult.IsFailure)
             {
                 await RespondAsync(embed: new EmbedBuilder()
@@ -121,11 +121,11 @@ namespace ScriptCord.Bot.Commands
                 return;
             }
 
-            IEnumerable<PlaylistListingDto> playlists = playlistsResult.Value;
+            IEnumerable<LightPlaylistListingDto> playlists = playlistsResult.Value;
             StringBuilder sb = new StringBuilder();
             int count = 1;
             foreach(var playlist in playlists)
-                sb.Append($"**{count}. {playlist.Name}**: songs: {0}, total length: {0}, size: {0}\n");
+                sb.Append($"**{count}. {playlist.Name}**: {playlist.SongCount} song{ (playlist.SongCount > 1 ? "s" : "") }");
 
             EmbedBuilder builder = new EmbedBuilder()
                     .WithTitle($"{Context.Guild.Name}'s Playlists")

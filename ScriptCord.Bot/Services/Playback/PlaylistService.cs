@@ -17,7 +17,7 @@ namespace ScriptCord.Bot.Services.Playback
     {
         Task<Result<Playlist>> GetPlaylistDetails(long guildId, string playlistName, bool isAdmin = false);
         string GetEntriesByGuildIdAndPlaylistName(long guildId, string playlistName, bool isAdmin = false);
-        Task<Result<IEnumerable<PlaylistListingDto>>> GetPlaylistDetailsByGuildIdAsync(long guildId);
+        Task<Result<IEnumerable<LightPlaylistListingDto>>> GetPlaylistDetailsByGuildIdAsync(long guildId);
         Task<Result> CreateNewPlaylist(long guildId, string playlistName, bool isPremiumUser = false);
         Task<Result> RenamePlaylist(long guildId, string oldPlaylistName, string newPlaylistName, bool isAdmin = false);
     }
@@ -54,17 +54,17 @@ namespace ScriptCord.Bot.Services.Playback
             throw new NotImplementedException();
         }
 
-        public async Task<Result<IEnumerable<PlaylistListingDto>>> GetPlaylistDetailsByGuildIdAsync(long guildId)
+        public async Task<Result<IEnumerable<LightPlaylistListingDto>>> GetPlaylistDetailsByGuildIdAsync(long guildId)
         {
             var result = await _playlistRepository.GetFiltered(x => x.GuildId == guildId);
             if (result.IsFailure)
             {
                 _logger.LogError(result);
-                return Result.Failure<IEnumerable<PlaylistListingDto>>("Unexpected error occurred while adding the playlist.");
+                return Result.Failure<IEnumerable<LightPlaylistListingDto>>("Unexpected error occurred while adding the playlist.");
             }
 
             var playlists = result.Value;
-            return Result.Success(playlists.Select(x => new PlaylistListingDto(x.Name, x.IsDefault, x.AdminOnly)));
+            return Result.Success(playlists.Select(x => new LightPlaylistListingDto(x.Name, x.IsDefault, x.AdminOnly, x.PlaylistEntries.Count)));
         }
 
         public async Task<Result> CreateNewPlaylist(long guildId, string playlistName, bool isPremiumUser = false)
