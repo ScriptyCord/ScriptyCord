@@ -127,7 +127,7 @@ namespace ScriptCord.Bot.Services.Playback
         private Result<IAudioManagementStrategy> GetSuitableStrategyByUrl(string url)
         {
             IAudioManagementStrategy audioManagementStrategy = null;
-            if (url.Contains("youtube") || url.Contains("youtu.be")) // TODO: Better pattern matching
+            if (url.StartsWith("https://www.youtube.com/watch") || url.StartsWith("https://youtu.be/"))
                 audioManagementStrategy = new YouTubeAudioManagementStrategy(_configuration);
             else
             {
