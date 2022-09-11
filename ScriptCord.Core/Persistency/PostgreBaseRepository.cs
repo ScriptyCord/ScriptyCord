@@ -79,6 +79,21 @@ namespace ScriptCord.Core.Persistency
             }
 
             return Result.Success(entity);
+
+        }
+        public async Task<Result<TEntity>> GetFirstAsync(Expression<Func<TEntity, bool>> filters, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            TEntity entity = null;
+            try
+            {
+                entity = await _session.Query<TEntity>().FirstAsync(filters, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                return Result.Failure<TEntity>(e.Message);
+            }
+
+            return Result.Success(entity);
         }
 
         public async Task<Result<int>> CountAsync(Expression<Func<TEntity, bool>> filters, CancellationToken cancellationToken = default(CancellationToken))

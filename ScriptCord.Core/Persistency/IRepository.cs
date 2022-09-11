@@ -14,6 +14,7 @@ namespace ScriptCord.Core.Persistency
         Task<Result<IEnumerable<TEntity>>> GetAllAsync(CancellationToken cancellationToken = default(CancellationToken));
         Task<Result<IEnumerable<TEntity>>> GetFiltered(Func<TEntity, bool> filters, CancellationToken cancellationToken = default(CancellationToken));
         Task<Result<TEntity>> GetSingleAsync(Expression<Func<TEntity, bool>> filters, CancellationToken cancellationToken = default(CancellationToken));
+        Task<Result<TEntity>> GetFirstAsync(Expression<Func<TEntity, bool>> filters, CancellationToken cancellationToken = default(CancellationToken));
         Task<Result<int>> CountAsync(Expression<Func<TEntity, bool>> filters, CancellationToken cancellationToken = default(CancellationToken));
         Task<Result> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default(CancellationToken));
         Task<Result> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default(CancellationToken));
