@@ -1,4 +1,5 @@
 ﻿using Discord.Interactions;
+using ScriptCord.Core.DiscordExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ScriptCord.Bot.Commands
 {
-    public class TestingModule : InteractionModuleBase<SocketInteractionContext>
+    public class TestingModule : ScriptCordCommandModule
     {
         private readonly InteractionService _commands;
 

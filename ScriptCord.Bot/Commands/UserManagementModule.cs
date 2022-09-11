@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using NLog;
+using ScriptCord.Core.DiscordExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ScriptCord.Bot.Commands
 {
-    public class UserManagementModule : InteractionModuleBase<SocketInteractionContext>
+    public class UserManagementModule : ScriptCordCommandModule
     {
         private readonly ILoggerFacade<UserManagementModule> _logger;
 

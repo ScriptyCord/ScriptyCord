@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="CSharpFunctionalExtensions" Version="2.33.2" />
+    <PackageReference Include="Discord.Net.Interactions" Version="3.8.0" />
     <PackageReference Include="NHibernate" Version="5.3.13" />
   </ItemGroup>
 

@@ -6,6 +6,7 @@ using ScriptCord.Bot.Dto.Playback;
 using ScriptCord.Bot.Repositories;
 using ScriptCord.Bot.Repositories.Playback;
 using ScriptCord.Bot.Services.Playback;
+using ScriptCord.Core.DiscordExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ using YoutubeExplode;
 namespace ScriptCord.Bot.Commands
 {
     [Group("playback", "Manages and plays audio in voice channels")]
-    public class PlaybackModule : InteractionModuleBase<SocketInteractionContext>
+    public class PlaybackModule : ScriptCordCommandModule
     {
         private readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkRed;
         private readonly ILoggerFacade<PlaybackModule> _logger;
@@ -45,15 +46,7 @@ namespace ScriptCord.Bot.Commands
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing entries in {name} playlist");
 
-            // TODO: Perhaps make a BaseScriptCordModule that inherits from interactionmodulebase that has utility methods that returns if a user is an admin etc.
-            var guildUser = Context.Guild.Users.FirstOrDefault(x => x.DisplayName == Context.User.Username);
-            bool isAdmin;
-            if (guildUser == null)
-                isAdmin = false;
-            else
-                isAdmin = guildUser.GuildPermissions.Administrator;
-
-            var playlistResult = await _playlistService.GetPlaylistDetails((long)Context.Guild.Id, name, isAdmin);
+            var playlistResult = await _playlistService.GetPlaylistDetails((long)Context.Guild.Id, name, IsUserGuildAdministrator());
             if (playlistResult.IsFailure)
             {
                 await RespondAsync(
@@ -173,14 +166,7 @@ namespace ScriptCord.Bot.Commands
         public async Task RenamePlaylist([Summary(description: "Old name of the playlist")] string oldName, string newName)
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Renaming a playlist");
-            var guildUser = Context.Guild.Users.FirstOrDefault(x => x.DisplayName == Context.User.Username);
-            bool isAdmin;
-            if (guildUser == null)
-                isAdmin = false;
-            else
-                isAdmin = guildUser.GuildPermissions.Administrator;
-
-            var result = await _playlistService.RenamePlaylist((long)Context.Guild.Id, oldName, newName, isAdmin);
+            var result = await _playlistService.RenamePlaylist((long)Context.Guild.Id, oldName, newName, IsUserGuildAdministrator());
             if (result.IsSuccess)
             {
                 await RespondAsync(
@@ -201,6 +187,12 @@ namespace ScriptCord.Bot.Commands
                         .Build()
                 );
             }
+        }
+
+        [SlashCommand("remove-playlist", "Removes the selected playlist")]
+        public async Task RemovePlaylist([Summary(description: "Name of the playlist")] string name)
+        {
+
         }
 
         #endregion PlaylistManagement
