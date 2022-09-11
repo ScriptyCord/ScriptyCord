@@ -11,9 +11,10 @@ namespace ScriptCord.Bot.Strategies.AudioManagement
 {
     public interface IAudioManagementStrategy
     {
-        string GenerateFileNameFromModel(AudioMetadataDto metadata);
+        string GenerateFileNameFromMetadata(AudioMetadataDto metadata);
         Task<Result> DownloadAudio(AudioMetadataDto metadata);
         Task<AudioMetadataDto> ExtractMetadataFromUrl(string url);
+        Task<AudioMetadataDto> GetMetadataBySourceId(string sourceId);
     }
 
     public static class AudioSourceType

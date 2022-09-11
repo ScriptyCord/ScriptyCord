@@ -43,6 +43,7 @@ namespace ScriptCord.Bot
             try
             {
                 await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+                await _interactionService.RegisterCommandsGloballyAsync(true);
             }
             catch (Exception e) 
             {
@@ -50,7 +51,7 @@ namespace ScriptCord.Bot
                 _client.Dispose();
                 System.Environment.Exit(1);
             }
-            await _interactionService.RegisterCommandsGloballyAsync(true);
+            
             _client.InteractionCreated += HandleInteraction;
         }
 

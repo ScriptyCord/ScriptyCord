@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using AngleSharp.Dom;
+using CSharpFunctionalExtensions;
 using Discord;
 using Discord.Interactions;
 using ScriptCord.Bot.Dto.Playback;
@@ -207,7 +208,7 @@ namespace ScriptCord.Bot.Commands
         #region EntriesManagement
 
         [SlashCommand("add-entry", "Adds a new entry to the specified playlist")]
-        public async Task AddEntry([Summary(description: "Name of the playlist")] string playlistName, string url)
+        public async Task AddEntry([Summary(description: "Name of the playlist")] string playlistName, [Summary(description: "Link to the video or audio")] string url)
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Adding an entry to a playlist");
             var result = await _playlistEntriesService.AddEntryFromUrlToPlaylistByName((long) Context.Guild.Id, playlistName, url);
@@ -224,6 +225,29 @@ namespace ScriptCord.Bot.Commands
             {
                 builder.WithTitle("Failure")
                     .WithDescription($"Failed to add a new entry to the playlist: {result.Error}!");
+            }
+
+            await RespondAsync(embed: builder.Build());
+        }
+
+        [SlashCommand("remove-entry", "Removes an entry from the specified playlist")]
+        public async Task RemoveEntry([Summary(description: "Name of the playlist")] string playlistName, [Summary(description: "Name of the entry")] string entryName)
+        {
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Removing an entry from a playlist");
+            var result = await _playlistEntriesService.RemoveEntryFromPlaylistByName((long)Context.Guild.Id, playlistName, entryName);
+            EmbedBuilder builder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+
+            if (result.IsSuccess)
+            {
+                var metadata = result.Value;
+                builder.WithTitle("Success")
+                    .WithThumbnailUrl(metadata.Thumbnail)
+                    .WithDescription($"Successfully removed '{metadata.Title}' from '{playlistName}'.");
+            }
+            else
+            {
+                builder.WithTitle("Failure")
+                    .WithDescription($"Failed to remove an entry from the playlist: {result.Error}!");
             }
 
             await RespondAsync(embed: builder.Build());

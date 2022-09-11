@@ -18,7 +18,8 @@ namespace ScriptCord.Bot.Models.Playback
             Map(x => x.Name).Column("name");
             Map(x => x.IsDefault).Column("is_default");
             Map(x => x.AdminOnly).Column("admin_only");
-            HasMany(x => x.PlaylistEntries).Cascade.SaveUpdate();
+            HasMany(x => x.PlaylistEntries)
+                .Cascade.Delete().Inverse();
         }
     }
 
@@ -32,7 +33,12 @@ namespace ScriptCord.Bot.Models.Playback
             Map(x => x.Title).Column("title");
             Map(x => x.Source).Column("source");
             Map(x => x.AudioLength).Column("audio_length");
-            References(x => x.Playlist).Cascade.SaveUpdate();
+            Map(x => x.SourceIdentifier).Column("source_identifier");
+            References(x => x.Playlist).ForeignKey("fk_playlist")
+                .Not.Nullable();
+                //.Not.Cascade.All();
+            //.Cascade.All()
+            //.Not.Cascade.All()
             //HasOne<Playlist>(x => x.Playlist.Id)
         }
     }

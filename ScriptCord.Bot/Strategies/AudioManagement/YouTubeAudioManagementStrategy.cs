@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using AngleSharp.Dom;
+using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Configuration;
 using ScriptCord.Bot.Dto.Playback;
 using ScriptCord.Bot.Models.Playback;
@@ -26,13 +27,15 @@ namespace ScriptCord.Bot.Strategies.AudioManagement
 
         public async Task<Result> DownloadAudio(AudioMetadataDto metadata)
         {
-            var filename = GenerateFileNameFromModel(metadata);
+            var filename = GenerateFileNameFromMetadata(metadata);
             var baseFolder = _configuration.GetSection("store").GetValue<string>("audioPath");
             var targetFilename = $"{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("defaultAudioExtension")}";
-            var temporaryFilename = $"{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("temporaryExtension")}";
+
+            // TODO: This must be an event trigger that will be handled somewhere else as all the other audio management actions
             try
             {
                 await _client.Videos.DownloadAsync(metadata.Url, targetFilename);
+                //_client.Videos.GetAsync(metadata.SourceId)
             }
             catch (Exception e)
             {
@@ -56,7 +59,21 @@ namespace ScriptCord.Bot.Strategies.AudioManagement
             };
         }
 
-        public string GenerateFileNameFromModel(AudioMetadataDto metadata)
+        public string GenerateFileNameFromMetadata(AudioMetadataDto metadata)
             => $"{metadata.SourceType}-{metadata.SourceId}";
+
+        public async Task<AudioMetadataDto> GetMetadataBySourceId(string sourceId)
+        {
+            var video = await _client.Videos.GetAsync(sourceId, default(CancellationToken));
+            return new AudioMetadataDto
+            {
+                Title = video.Title,
+                AudioLength = (long)video.Duration.Value.TotalMilliseconds,
+                Thumbnail = video.Thumbnails.OrderByDescending(x => x.Resolution.Width * x.Resolution.Height).First().Url,
+                SourceType = AudioSourceType.YouTube,
+                SourceId = video.Id,
+                Url = video.Url
+            };
+        }
     }
 }
