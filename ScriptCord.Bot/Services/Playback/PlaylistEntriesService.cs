@@ -53,7 +53,7 @@ namespace ScriptCord.Bot.Services.Playback
             if (playlist.PlaylistEntries.Count(x => x.SourceIdentifier == metadata.SourceId) > 0)
                 return Result.Success(metadata);
             
-            PlaylistEntry newEntry = new PlaylistEntry { Playlist = playlist, Title = metadata.Title, Source = metadata.SourceType, SourceIdentifier = metadata.SourceId, AudioLength = metadata.AudioLength };
+            PlaylistEntry newEntry = new PlaylistEntry { Playlist = playlist, UploadTimestamp = DateTime.UtcNow, Title = metadata.Title, Source = metadata.SourceType, SourceIdentifier = metadata.SourceId, AudioLength = metadata.AudioLength };
 
             Result audioDownloadResult = await strategy.DownloadAudio(metadata);
             if (audioDownloadResult.IsFailure)
