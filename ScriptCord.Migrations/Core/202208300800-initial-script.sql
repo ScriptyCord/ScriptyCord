@@ -2,6 +2,8 @@
 
 create extension "uuid-ossp";
 
+SET TIME ZONE 'UTC';
+
 -- Music Bot
 drop table if exists scriptcord.playlist_entries;
 drop table if exists scriptcord.playlists;

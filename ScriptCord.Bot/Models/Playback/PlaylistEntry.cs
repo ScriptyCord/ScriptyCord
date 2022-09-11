@@ -21,6 +21,8 @@ namespace ScriptCord.Bot.Models.Playback
 
         public virtual long AudioLength { get; set; }
 
+        public virtual DateTime UploadTimestamp { get; set; }
+
         public virtual string AudioLengthFormatted()
         {
             TimeSpan t = TimeSpan.FromMilliseconds(AudioLength);

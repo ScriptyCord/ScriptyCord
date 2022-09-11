@@ -34,6 +34,7 @@ namespace ScriptCord.Bot.Models.Playback
             Map(x => x.Source).Column("source");
             Map(x => x.AudioLength).Column("audio_length");
             Map(x => x.SourceIdentifier).Column("source_identifier");
+            Map(x => x.UploadTimestamp).Column("upload_timestamp");
             References(x => x.Playlist).ForeignKey("fk_playlist")
                 .Not.Nullable();
                 //.Not.Cascade.All();

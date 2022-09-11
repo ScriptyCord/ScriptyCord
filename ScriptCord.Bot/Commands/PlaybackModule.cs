@@ -42,11 +42,11 @@ namespace ScriptCord.Bot.Commands
         //[RequireUserPermission(ChannelPermission.Speak)]
         [SlashCommand("list-entries", "Lists entries of a given playlist")]
         // [Choice("playlists", "entries")]
-        public async Task ListEntries([Summary(description: "Name of the playlist")] string name)
+        public async Task ListEntries([Summary(description: "Name of the playlist")] string playlistName)
         {
-            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing entries in {name} playlist");
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing entries in {playlistName} playlist");
 
-            var playlistResult = await _playlistService.GetPlaylistDetails((long)Context.Guild.Id, name, IsUserGuildAdministrator());
+            var playlistResult = await _playlistService.GetPlaylistDetails((long)Context.Guild.Id, playlistName, IsUserGuildAdministrator());
             if (playlistResult.IsFailure)
             {
                 await RespondAsync(
@@ -58,41 +58,34 @@ namespace ScriptCord.Bot.Commands
                 );
             }
 
-            if (playlistResult.Value.PlaylistEntries.Count == 0)
+            if (playlistResult.Value.SongCount == 0)
             {
                 await RespondAsync(
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
-                        .WithTitle($"{name} entries")
+                        .WithTitle($"{playlistName} entries")
                         .WithDescription($"No entries in this playlist")
-                        .Build()
-                );
-            }
-            else if (playlistResult.Value.PlaylistEntries.Count <= 50)
-            {
-                StringBuilder sb = new StringBuilder();
-                int index = 1;
-                foreach (var pair in playlistResult.Value.PlaylistEntries.Select(x => new { Index = index, Entry = x }))
-                {
-                    sb.AppendLine($"**{pair.Index}**. '{pair.Entry.Title}' from {pair.Entry.Source} ({pair.Entry.AudioLengthFormatted()})");
-                    index++;
-                }
-                await RespondAsync(
-                    embed: new EmbedBuilder()
-                        .WithColor(_modulesEmbedColor)
-                        .WithTitle($"{name} entries")
-                        .WithDescription(sb.ToString())
                         .Build()
                 );
             }
             else
             {
+                StringBuilder sb = new StringBuilder();
+                int index = 1;
+                foreach (var pair in playlistResult.Value.NewestFifteenAudioClips.Select(x => new { Index = index, Entry = x }))
+                {
+                    sb.AppendLine($"**{pair.Index}**. '{pair.Entry.Title}' (ID: {pair.Entry.Id}, {pair.Entry.Source} ID: {pair.Entry.SourceId}, Length: {pair.Entry.AudioLength})");
+                    index++;
+                }
+
+                if (playlistResult.Value.SongCount >= 15)
+                    sb.AppendLine("...");
+
                 await RespondAsync(
-                    // TODO: File export with embed
                     embed: new EmbedBuilder()
                         .WithColor(_modulesEmbedColor)
-                        .WithTitle($"{name} entries")
-                        .WithDescription("Too many entries in the playlist! In the future a file with entries will be appended.")
+                        .WithTitle($"{playlistName} entries")
+                        .WithDescription(sb.ToString())
                         .Build()
                 );
             }
@@ -192,7 +185,28 @@ namespace ScriptCord.Bot.Commands
         [SlashCommand("remove-playlist", "Removes the selected playlist")]
         public async Task RemovePlaylist([Summary(description: "Name of the playlist")] string name)
         {
-
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Removing a playlist");
+            var result = await _playlistService.RemovePlaylist((long) Context.Guild.Id, name, IsUserGuildAdministrator());
+            if (result.IsSuccess)
+            {
+                await RespondAsync(
+                    embed: new EmbedBuilder()
+                        .WithColor(_modulesEmbedColor)
+                        .WithTitle("Success")
+                        .WithDescription($"Successfully deleted playlist '{name}'.")
+                        .Build()
+                );
+            }
+            else
+            {
+                await RespondAsync(
+                    embed: new EmbedBuilder()
+                        .WithColor(_modulesEmbedColor)
+                        .WithTitle("Failure")
+                        .WithDescription($"Failed to remove the specified playlist: {result.Error}")
+                        .Build()
+                );
+            }
         }
 
         #endregion PlaylistManagement

@@ -16,12 +16,15 @@ namespace ScriptCord.Bot.Dto.Playback
 
         public int SongCount { get; protected set; }
 
-        public LightPlaylistListingDto(string name, bool defaultPlaylist, bool adminPermission, int songCount)
+        public IList<LightPlaylistEntryDto> NewestFifteenAudioClips { get; protected set; }
+
+        public LightPlaylistListingDto(string name, bool defaultPlaylist, bool adminPermission, int songCount, IList<LightPlaylistEntryDto> newestFifteenAudioClips = null)
         {
             Name = name;
             DefaultPlaylist = defaultPlaylist;
             AdminPermission = adminPermission;
             SongCount = songCount;
+            NewestFifteenAudioClips = newestFifteenAudioClips;
         }
     }
 }

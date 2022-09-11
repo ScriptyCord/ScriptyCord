@@ -136,6 +136,7 @@ namespace ScriptCord.Core.Persistency
                 try
                 {
                     await _session.DeleteAsync(entity, cancellationToken);
+                    //_session.Query<TEntity>().Where(x => true).DeleteAsync(cancellationToken);
                     await transaction.CommitAsync();
                 }
                 catch (Exception e)
@@ -144,6 +145,25 @@ namespace ScriptCord.Core.Persistency
                     return Result.Failure(e.Message);
                 }
                 
+            }
+            return Result.Success();
+        }
+
+        public async Task<Result> DeleteManyAsync(Expression<Func<TEntity, bool>> filters, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            using (var transaction = _session.BeginTransaction())
+            {
+                try
+                {
+                    await _session.Query<TEntity>().Where(filters).DeleteAsync(cancellationToken);
+                    await transaction.CommitAsync();
+                }
+                catch (Exception e)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    return Result.Failure(e.Message);
+                }
+
             }
             return Result.Success();
         }

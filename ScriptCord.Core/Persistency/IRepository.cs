@@ -18,6 +18,7 @@ namespace ScriptCord.Core.Persistency
         Task<Result<int>> CountAsync(Expression<Func<TEntity, bool>> filters, CancellationToken cancellationToken = default(CancellationToken));
         Task<Result> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default(CancellationToken));
         Task<Result> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default(CancellationToken));
+        Task<Result> DeleteManyAsync(Expression<Func<TEntity, bool>> filters, CancellationToken cancellationToken = default(CancellationToken));
         Task<Result> TransactionAsync(Action action, CancellationToken cancellationToken = default(CancellationToken));
     }
 }
