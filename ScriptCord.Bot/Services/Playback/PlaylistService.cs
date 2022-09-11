@@ -79,7 +79,7 @@ namespace ScriptCord.Bot.Services.Playback
             if (result.IsFailure)
             {
                 _logger.LogError(result);
-                return Result.Failure<IEnumerable<LightPlaylistListingDto>>("Unexpected error occurred while adding the playlist.");
+                return Result.Failure<IEnumerable<LightPlaylistListingDto>>("Unexpected error occurred while extracting playlist details.");
             }
 
             var playlists = result.Value;
