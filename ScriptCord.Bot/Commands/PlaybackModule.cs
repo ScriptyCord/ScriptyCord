@@ -186,27 +186,34 @@ namespace ScriptCord.Bot.Commands
         public async Task RemovePlaylist([Summary(description: "Name of the playlist")] string name)
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Removing a playlist");
+            await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "remove-playlist", "Removing a playlist and its entries. This may take a while depending on user traffic and amount of entries. Please wait..."), ephemeral: true);
+
             var result = await _playlistService.RemovePlaylist(Context.Guild.Id, name, IsUserGuildAdministrator());
+            EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
             if (result.IsSuccess)
             {
-                await RespondAsync(
-                    embed: new EmbedBuilder()
-                        .WithColor(_modulesEmbedColor)
-                        .WithTitle("Success")
-                        .WithDescription($"Successfully deleted playlist '{name}'.")
-                        .Build()
-                );
+                //await RespondAsync(
+                //    embed: new EmbedBuilder()
+                //        .WithColor(_modulesEmbedColor)
+                //        .WithTitle("Success")
+                //        .WithDescription($"Successfully deleted playlist '{name}'.")
+                //        .Build()
+                //);
+                embedBuilder.WithTitle("Success").WithDescription($"Successfully deleted playlist '{name}'.");
             }
             else
             {
-                await RespondAsync(
-                    embed: new EmbedBuilder()
-                        .WithColor(_modulesEmbedColor)
-                        .WithTitle("Failure")
-                        .WithDescription($"Failed to remove the specified playlist: {result.Error}")
-                        .Build()
-                );
+                //await RespondAsync(
+                //    embed: new EmbedBuilder()
+                //        .WithColor(_modulesEmbedColor)
+                //        .WithTitle("Failure")
+                //        .WithDescription($"Failed to remove the specified playlist: {result.Error}")
+                //        .Build()
+                //);
+                embedBuilder.WithTitle("Failure").WithDescription($"Failed to remove the specified playlist: {result.Error}");
             }
+
+            await FollowupAsync(embed: embedBuilder.Build());
         }
 
         #endregion PlaylistManagement
@@ -217,6 +224,8 @@ namespace ScriptCord.Bot.Commands
         public async Task AddEntry([Summary(description: "Name of the playlist")] string playlistName, [Summary(description: "Link to the video or audio")] string url)
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Adding an entry to a playlist");
+            await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "add-entry", "Adding entry. This may take a while depending on user traffic and audio length. Please wait..."), ephemeral: true);
+
             var result = await _playlistEntriesService.AddEntryFromUrlToPlaylistByName(Context.Guild.Id, playlistName, url);
             EmbedBuilder builder = new EmbedBuilder().WithColor(_modulesEmbedColor);
 
@@ -233,13 +242,15 @@ namespace ScriptCord.Bot.Commands
                     .WithDescription($"Failed to add a new entry to the playlist: {result.Error}!");
             }
 
-            await RespondAsync(embed: builder.Build());
+            await FollowupAsync(embed: builder.Build());
         }
 
         [SlashCommand("remove-entry", "Removes an entry from the specified playlist")]
         public async Task RemoveEntry([Summary(description: "Name of the playlist")] string playlistName, [Summary(description: "Name of the entry")] string entryName)
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Removing an entry from a playlist");
+            await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "remove-entry", "Removing the entry. This may take a while depending on user traffic. Please wait..."), ephemeral: true);
+
             var result = await _playlistEntriesService.RemoveEntryFromPlaylistByName(Context.Guild.Id, playlistName, entryName);
             EmbedBuilder builder = new EmbedBuilder().WithColor(_modulesEmbedColor);
 
@@ -256,7 +267,7 @@ namespace ScriptCord.Bot.Commands
                     .WithDescription($"Failed to remove an entry from the playlist: {result.Error}!");
             }
 
-            await RespondAsync(embed: builder.Build());
+            await FollowupAsync(embed: builder.Build());
         }
 
         #endregion EntriesManagement
