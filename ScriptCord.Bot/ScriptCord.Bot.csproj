@@ -53,4 +53,8 @@
     <ProjectReference Include="..\ScriptCord.Core\ScriptCord.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Workers\Playback\" />
+  </ItemGroup>
+
 </Project>

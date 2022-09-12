@@ -60,7 +60,6 @@ namespace ScriptCord.Bot.Services.Playback
             }
             if (checkIfAlreadyDownloadedResult.Value == 0)
             {
-                // TODO: Trigger download event instead
                 Result audioDownloadResult = await strategy.DownloadAudio(metadata);
                 if (audioDownloadResult.IsFailure)
                 {
@@ -110,11 +109,6 @@ namespace ScriptCord.Bot.Services.Playback
 
             IAudioManagementStrategy strategy = strategyValue.Value;
             var metadata = await strategy.GetMetadataBySourceId(entry.SourceIdentifier);
-            var baseFolder = _configuration.GetSection("store").GetValue<string>("audioPath");
-            var filename = strategy.GenerateFileNameFromMetadata(metadata);
-            var filepath = $"{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("defaultAudioExtension")}";
-
-            // TODO: Trigger event to delete if no other guild uses this file too and continue the below only on success
 
             playlist.PlaylistEntries.Remove(entry);
             Result removeResult = await _playlistEntriesRepository.DeleteAsync(entry);
@@ -124,12 +118,27 @@ namespace ScriptCord.Bot.Services.Playback
                 return Result.Failure<AudioMetadataDto>("Unexpected error while removing an entry from playlist");
             }
 
-            //Result result = await _playlistRepository.UpdateAsync(playlist);
-            //if (result.IsFailure)
-            //{
-            //    _logger.LogError(result);
-            //    return Result.Failure<AudioMetadataDto>("Unexpected error while removing an entry from playlist");
-            //}
+            var checkIfOtherPlaylistUsesFile = await _playlistEntriesRepository.CountAsync(x => x.SourceIdentifier == metadata.SourceId);
+            if (checkIfOtherPlaylistUsesFile.IsFailure)
+            {
+                _logger.LogError(checkIfOtherPlaylistUsesFile);
+                return Result.Failure<AudioMetadataDto>($"Unexpected error occurred when trying to check if file already downloaded");
+            }
+            if (checkIfOtherPlaylistUsesFile.Value == 0)
+            {
+                var baseFolder = _configuration.GetSection("store").GetValue<string>("audioPath");
+                var filename = strategy.GenerateFileNameFromMetadata(metadata);
+                var filepath = $"{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("defaultAudioExtension")}";
+                try
+                {
+                    File.Delete(filepath);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogException(e);
+                    return Result.Success(metadata); // This error doesn't concern the user
+                }
+            }
 
             return Result.Success(metadata);
         }
