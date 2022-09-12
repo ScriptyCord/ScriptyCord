@@ -37,7 +37,10 @@ namespace ScriptCord.Core.Persistency
         {
             if (value == null)
                 return null;
-            return ((ulong)value).ToString();
+            if (value is not string)
+                return ((ulong)value).ToString();
+            else
+                return value;
         }
 
         public object Disassemble(object value)
