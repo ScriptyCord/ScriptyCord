@@ -15,7 +15,7 @@ namespace ScriptCord.Bot.Services.Playback
 {
     public interface IPlaylistEntriesService
     {
-        Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(ulong guildId, string playlistName, string url);
+        Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(ulong guildId, string playlistName, string url, bool isAdmin = false);
         Task<Result<AudioMetadataDto>> RemoveEntryFromPlaylistByName(ulong guildId, string playlistName, string entryName, bool isAdmin = false);
     }
 
@@ -34,7 +34,7 @@ namespace ScriptCord.Bot.Services.Playback
             _configuration = configuration;
         }
 
-        public async Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(ulong guildId, string playlistName, string url)
+        public async Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(ulong guildId, string playlistName, string url, bool isAdmin = false)
         {
             var playlistResult = await _playlistRepository.GetSingleAsync(x => x.GuildId == guildId && x.Name == playlistName);
             if (playlistResult.IsFailure)
@@ -43,6 +43,8 @@ namespace ScriptCord.Bot.Services.Playback
                 return Result.Failure<AudioMetadataDto>($"Unable to find playlist named {playlistName}");
             }
             var playlist = playlistResult.Value;
+            if (playlist.AdminOnly && !isAdmin)
+                return Result.Failure<AudioMetadataDto>($"You must be the administrator of the guild to add an entry to this playlist");
 
             Result<IAudioManagementStrategy> strategyResult = GetSuitableStrategyByUrl(url);
             if (strategyResult.IsFailure)
