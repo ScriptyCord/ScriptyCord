@@ -22,7 +22,6 @@ namespace ScriptCord.Bot.Commands
     {
         private readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkRed;
         private readonly ILoggerFacade<PlaybackModule> _logger;
-        //private readonly YoutubeClient _client;
 
         private readonly IPlaylistService _playlistService;
         private readonly IPlaylistEntriesService _playlistEntriesService;
@@ -30,7 +29,6 @@ namespace ScriptCord.Bot.Commands
         public PlaybackModule(ILoggerFacade<PlaybackModule> logger, IPlaylistService playlistService, IPlaylistEntriesService playlistEntriesService)
         {
             _logger = logger;
-            //_client = new YoutubeClient();
 
             _playlistService = playlistService;
             _playlistEntriesService = playlistEntriesService;
@@ -38,10 +36,7 @@ namespace ScriptCord.Bot.Commands
 
         #region PlaylistManagement
         
-        //[RequireUserPermission(ChannelPermission.Connect)]
-        //[RequireUserPermission(ChannelPermission.Speak)]
         [SlashCommand("list-entries", "Lists entries of a given playlist")]
-        // [Choice("playlists", "entries")]
         public async Task ListEntries([Summary(description: "Name of the playlist")] string playlistName)
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing entries in {playlistName} playlist");
@@ -191,27 +186,9 @@ namespace ScriptCord.Bot.Commands
             var result = await _playlistService.RemovePlaylist(Context.Guild.Id, name, IsUserGuildAdministrator());
             EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
             if (result.IsSuccess)
-            {
-                //await RespondAsync(
-                //    embed: new EmbedBuilder()
-                //        .WithColor(_modulesEmbedColor)
-                //        .WithTitle("Success")
-                //        .WithDescription($"Successfully deleted playlist '{name}'.")
-                //        .Build()
-                //);
                 embedBuilder.WithTitle("Success").WithDescription($"Successfully deleted playlist '{name}'.");
-            }
             else
-            {
-                //await RespondAsync(
-                //    embed: new EmbedBuilder()
-                //        .WithColor(_modulesEmbedColor)
-                //        .WithTitle("Failure")
-                //        .WithDescription($"Failed to remove the specified playlist: {result.Error}")
-                //        .Build()
-                //);
                 embedBuilder.WithTitle("Failure").WithDescription($"Failed to remove the specified playlist: {result.Error}");
-            }
 
             await FollowupAsync(embed: embedBuilder.Build());
         }

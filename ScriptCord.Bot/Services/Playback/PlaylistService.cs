@@ -167,15 +167,6 @@ namespace ScriptCord.Bot.Services.Playback
 
         public async Task<Result> RemovePlaylist(ulong guildId, string playlistName, bool isAdmin = false)
         {
-            //var countResult = await _playlistRepository.CountAsync(x => x.GuildId == guildId && x.Name == playlistName);
-            //if (countResult.IsSuccess && countResult.Value == 0)
-            //    return Result.Failure("A playlist with the chosen name does not exist in this server!");
-            //else if (countResult.IsFailure)
-            //{
-            //    _logger.LogError(countResult);
-            //    return Result.Failure("Unexpected error occurred while searching for specified playlist in guild.");
-            //}
-
             var modelResult = await _playlistRepository.GetSingleAsync(x => x.GuildId == guildId && x.Name == playlistName);
             if (modelResult.IsFailure)
             {
@@ -191,8 +182,6 @@ namespace ScriptCord.Bot.Services.Playback
 
             
 
-            // TODO: Schedule an event for removal of entries' files that are not present in other playlists
-            // model.PlaylistEntries.Where()
             model.PlaylistEntries.Clear();
             var deleteManyResult = await _playlistEntriesRepository.DeleteManyAsync(x => x.Playlist.Id == model.Id);
             if (deleteManyResult.IsFailure)
