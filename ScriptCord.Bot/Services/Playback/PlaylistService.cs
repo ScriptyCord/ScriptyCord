@@ -1,8 +1,10 @@
 ﻿using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Configuration;
 using ScriptCord.Bot.Dto.Playback;
 using ScriptCord.Bot.Models.Playback;
 using ScriptCord.Bot.Repositories;
 using ScriptCord.Bot.Repositories.Playback;
+using ScriptCord.Bot.Strategies.AudioManagement;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
@@ -10,6 +12,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using static NHibernate.Loader.Custom.CustomLoader;
 
 namespace ScriptCord.Bot.Services.Playback
 {
@@ -27,12 +30,14 @@ namespace ScriptCord.Bot.Services.Playback
         private readonly ILoggerFacade<IPlaylistService> _logger;
         private readonly IPlaylistRepository _playlistRepository;
         private readonly IPlaylistEntriesRepository _playlistEntriesRepository;
+        private readonly IConfiguration _configuration;
 
-        public PlaylistService(ILoggerFacade<IPlaylistService> logger, IPlaylistRepository playlistRepository, IPlaylistEntriesRepository playlistEntriesRepository)
+        public PlaylistService(ILoggerFacade<IPlaylistService> logger, IPlaylistRepository playlistRepository, IPlaylistEntriesRepository playlistEntriesRepository, IConfiguration configuration)
         {
             _logger = logger;
             _playlistRepository = playlistRepository;
             _playlistEntriesRepository = playlistEntriesRepository;
+            _configuration = configuration;
         }
 
         public async Task<Result<LightPlaylistListingDto>> GetPlaylistDetails(ulong guildId, string playlistName, bool isAdmin = false)
@@ -180,22 +185,8 @@ namespace ScriptCord.Bot.Services.Playback
             if (model.AdminOnly && !isAdmin)
                 return Result.Failure("Only an admin can remove this playlist");
 
-            
-
-            model.PlaylistEntries.Clear();
-            var deleteManyResult = await _playlistEntriesRepository.DeleteManyAsync(x => x.Playlist.Id == model.Id);
-            if (deleteManyResult.IsFailure)
-            {
-                _logger.LogError(deleteManyResult);
-                return Result.Failure("Unexpected error occurred while removing entries of a playlist.");
-            }
-
-            var deletePlaylistResult = await _playlistRepository.DeleteAsync(model);
-            if (deletePlaylistResult.IsFailure)
-            {
-                _logger.LogError(deletePlaylistResult);
-                return Result.Failure("Unexpected error occurred while removing a playlist.");
-            }
+            var sourceIdsOfEntriesToRemove = model.PlaylistEntries.AsEnumerable().Select(x => new { SourceIdentifier = x.SourceIdentifier, Source = x.Source });
+           
 
             // Switch first different one to a default playlist if not the only playlist
             if (model.IsDefault)
@@ -213,8 +204,59 @@ namespace ScriptCord.Bot.Services.Playback
                     await _playlistRepository.UpdateAsync(otherModel);
                 }
             }
+            
+            // Remove each entry file that isn't used by other playlists
+            foreach(var source in sourceIdsOfEntriesToRemove)
+            {
+                var isAnyOtherPlaylistUsingResult = await _playlistEntriesRepository
+                    .CountAsync(x => x.SourceIdentifier == source.SourceIdentifier && x.Source == source.Source && x.Playlist.Id != model.Id);
+                if (isAnyOtherPlaylistUsingResult.IsFailure)
+                {
+                    _logger.LogError(isAnyOtherPlaylistUsingResult);
+                    continue; // This does not concern the user so continue
+                }
+                else if (isAnyOtherPlaylistUsingResult.Value > 0)
+                    continue;
+
+                var strategy = GetStrategyBySource(source.Source);
+                var metadata = await strategy.GetMetadataBySourceId(source.SourceIdentifier);
+                var baseFolder = _configuration.GetSection("store").GetValue<string>("audioPath");
+                var filename = strategy.GenerateFileNameFromMetadata(metadata);
+                var filepath = $"{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("defaultAudioExtension")}";
+                try
+                {
+                    File.Delete(filepath);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogException(e); // This error doesn't concern the user so continue
+                }
+            }
+
+            model.PlaylistEntries.Clear();
+            var deleteManyResult = await _playlistEntriesRepository.DeleteManyAsync(x => x.Playlist.Id == model.Id);
+            if (deleteManyResult.IsFailure)
+            {
+                _logger.LogError(deleteManyResult);
+                return Result.Failure("Unexpected error occurred while removing entries of a playlist.");
+            }
+
+            var deletePlaylistResult = await _playlistRepository.DeleteAsync(model);
+            if (deletePlaylistResult.IsFailure)
+            {
+                _logger.LogError(deletePlaylistResult);
+                return Result.Failure("Unexpected error occurred while removing a playlist.");
+            }
 
             return Result.Success();
+        }
+
+        private IAudioManagementStrategy GetStrategyBySource(string source)
+        {
+            if (source == AudioSourceType.YouTube)
+                return new YouTubeAudioManagementStrategy(_configuration);
+            else
+                throw new NotImplementedException(); // This should never happen
         }
     }
 }
