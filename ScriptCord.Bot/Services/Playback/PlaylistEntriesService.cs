@@ -52,23 +52,31 @@ namespace ScriptCord.Bot.Services.Playback
             IAudioManagementStrategy strategy = strategyResult.Value;
             AudioMetadataDto metadata = await strategy.ExtractMetadataFromUrl(url);
 
-            if (playlist.PlaylistEntries.Count(x => x.SourceIdentifier == metadata.SourceId) > 0)
-                return Result.Success(metadata);
-            
-            PlaylistEntry newEntry = new PlaylistEntry { Playlist = playlist, UploadTimestamp = DateTime.UtcNow, Title = metadata.Title, Source = metadata.SourceType, SourceIdentifier = metadata.SourceId, AudioLength = metadata.AudioLength };
-
-            Result audioDownloadResult = await strategy.DownloadAudio(metadata);
-            if (audioDownloadResult.IsFailure)
+            var checkIfAlreadyDownloadedResult = await _playlistEntriesRepository.CountAsync(x => x.SourceIdentifier == metadata.SourceId);
+            if (checkIfAlreadyDownloadedResult.IsFailure)
             {
-                _logger.LogError(audioDownloadResult);
-                return Result.Failure<AudioMetadataDto>(audioDownloadResult.Error);
+                _logger.LogError(checkIfAlreadyDownloadedResult);
+                return Result.Failure<AudioMetadataDto>($"Unexpected error occurred when trying to check if file already downloaded");
             }
-
-            var result = await _playlistEntriesRepository.SaveAsync(newEntry);
-            if (result.IsFailure)
+            if (checkIfAlreadyDownloadedResult.Value == 0)
             {
-                _logger.LogError(result);
-                return Result.Failure<AudioMetadataDto>(result.Error);
+                // TODO: Trigger download event instead
+                Result audioDownloadResult = await strategy.DownloadAudio(metadata);
+                if (audioDownloadResult.IsFailure)
+                {
+                    _logger.LogError(audioDownloadResult);
+                    return Result.Failure<AudioMetadataDto>(audioDownloadResult.Error);
+                }
+            }
+            if (playlist.PlaylistEntries.Count(x => x.SourceIdentifier == metadata.SourceId) == 0)
+            {
+                PlaylistEntry newEntry = new PlaylistEntry { Playlist = playlist, UploadTimestamp = DateTime.UtcNow, Title = metadata.Title, Source = metadata.SourceType, SourceIdentifier = metadata.SourceId, AudioLength = metadata.AudioLength };
+                var result = await _playlistEntriesRepository.SaveAsync(newEntry);
+                if (result.IsFailure)
+                {
+                    _logger.LogError(result);
+                    return Result.Failure<AudioMetadataDto>(result.Error);
+                }
             }
 
             return Result.Success(metadata);
