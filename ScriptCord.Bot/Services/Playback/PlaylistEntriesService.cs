@@ -78,6 +78,7 @@ namespace ScriptCord.Bot.Services.Playback
                     return Result.Failure<AudioMetadataDto>(audioDownloadResult.Error);
                 }
             }
+
             if (playlist.PlaylistEntries.Count(x => x.SourceIdentifier == metadata.SourceId) == 0)
             {
                 PlaylistEntry newEntry = new PlaylistEntry { Playlist = playlist, UploadTimestamp = DateTime.UtcNow, Title = metadata.Title, Source = metadata.SourceType, SourceIdentifier = metadata.SourceId, AudioLength = metadata.AudioLength };
@@ -88,6 +89,8 @@ namespace ScriptCord.Bot.Services.Playback
                     return Result.Failure<AudioMetadataDto>(result.Error);
                 }
             }
+            else
+                return Result.Failure<AudioMetadataDto>("Entry was already in the playlist");
 
             return Result.Success(metadata);
         }
