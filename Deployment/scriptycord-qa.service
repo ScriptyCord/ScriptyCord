@@ -7,10 +7,10 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-User=noir
+User=root
 Environment=ENVIRONMENT_TYPE=qa
-WorkingDirectory=/skywalker-pool/Servers/ScriptCord/Deployment/Builds/ScriptyCord.Bot/
-ExecStart=./ScriptCord.Bot
+WorkingDirectory=/your/path/here/ScriptyCord.Bot/
+ExecStart=/your/path/here/ScriptyCord.Bot/ScriptyCord.Bot
 
 [Install]
 WantedBy=multi-user.target
