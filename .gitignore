@@ -75,7 +75,7 @@ _[Ss]cripts
 *.dot[Cc]over
 
 # development files
-ScriptCord.*/appsettings.*.json
+ScriptyCord.*/appsettings.*.json
 Deployment/Builds/
 .vs/
 .vscode/
