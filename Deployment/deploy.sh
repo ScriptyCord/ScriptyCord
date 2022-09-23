@@ -31,7 +31,7 @@ if [ ! "$(docker ps -q -f name=${db_name})" ]; then
         docker start $db_name
     else
         declare -A connection_values=(['port']='0' ['Password']='')
-        connection_string="$(jq .ConnectionStrings.DefaultConnection ../ScriptCord.Migrations/appsettings.${DEPLOY_ENV}.json)"
+        connection_string="$(jq .ConnectionStrings.DefaultConnection ../ScriptyCord.Migrations/appsettings.${DEPLOY_ENV}.json)"
         IFS=';' connection_tokens=( $connection_string )
         for pair in "${connection_tokens[@]}";
         do
@@ -50,13 +50,13 @@ fi
 
 # Migrations
 echo "Building migrator"
-dotnet build ../ScriptCord.Migrations/ --os linux --configuration release --output ./Builds/ScriptyCord.Migrations/
+dotnet build ../ScriptyCord.Migrations/ --os linux --configuration release --output ./Builds/ScriptyCord.Migrations/
 echo "Running migrations"
-cd Builds/ScriptyCord.Migrations/ && ENVIRONMENT_TYPE=$DEPLOY_ENV ./ScriptCord.Migrations && cd ../../
+cd Builds/ScriptyCord.Migrations/ && ENVIRONMENT_TYPE=$DEPLOY_ENV ./ScriptyCord.Migrations && cd ../../
 
 # Deploy the bot
 echo "Deploying the bot"
-dotnet publish ../ScriptCord.Bot/ --os linux --configuration release --output ./Builds/ScriptyCord.Bot/
+dotnet publish ../ScriptyCord.Bot/ --os linux --configuration release --output ./Builds/ScriptyCord.Bot/
 mkdir ./Builds/ScriptyCord.Bot/Downloads
 mkdir ./Builds/ScriptyCord.Bot/Downloads/Audio
 
