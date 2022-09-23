@@ -72,44 +72,44 @@ namespace ScriptCord.Bot
         public Task LogAsync(LogMessage log)
         {
             _discordSeverityLogProxy[log.Severity](log.Message);
-            _textChannel?.SendMessageAsync($"`[{typeof(T).Name}] {log.Message}`");
+            _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {log.Message}`");
             return Task.CompletedTask;
         }
 
         public void Log(LogLevel level, string log)
         {
             _logger.Log(level, log);
-            _textChannel?.SendMessageAsync($"`[{typeof(T).Name}] {log}`");
+            _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {log}`");
         }
 
         public void LogInfo(string log)
         {
             _logger.Log(NLog.LogLevel.Info, log);
-            _textChannel?.SendMessageAsync($"`[{typeof(T).Name}] {log}`");
+            _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {log}`");
         }
 
         public void LogError(Result result)
         {
             _logger.Log(NLog.LogLevel.Error, result.Error);
-            _textChannel?.SendMessageAsync($"`[{typeof(T).Name}] {result.Error}`");
+            _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {result.Error}`");
         }
 
         public void LogException(Exception exception)
         {
             _logger.Log(NLog.LogLevel.Error, exception);
-            _textChannel?.SendMessageAsync($"`[{typeof(T).Name}] {exception.Message}`");
+            _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {exception.Message}`");
         }
 
         public void LogFatalException(Exception exception)
         {
             _logger.Log(NLog.LogLevel.Fatal, exception);
-            _textChannel?.SendMessageAsync($"`[{typeof(T).Name}] {exception.Message}`");
+            _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {exception.Message}`");
         }
 
         public void LogDebug(string message)
         {
             _logger.Log(NLog.LogLevel.Debug, message);
-            _textChannel?.SendMessageAsync($"`[{typeof(T).Name}] {message}`");
+            _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {message}`");
         }
     }
 }
