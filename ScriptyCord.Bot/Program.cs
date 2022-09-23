@@ -11,6 +11,8 @@ namespace ScriptCord.Bot
 {
     public class Program
     {
+        public static string Version = "dev-branch";
+
         static void Main(string[] args)
             => new Program()
                 .RunAsync()
