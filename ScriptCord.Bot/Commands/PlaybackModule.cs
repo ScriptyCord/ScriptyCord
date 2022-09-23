@@ -114,7 +114,10 @@ namespace ScriptCord.Bot.Commands
             StringBuilder sb = new StringBuilder();
             int count = 1;
             foreach(var playlist in playlists)
-                sb.Append($"**{count}. {playlist.Name}**: {playlist.SongCount} song{ (playlist.SongCount > 1 ? "s" : "") }");
+            {
+                sb.Append($"**{count}. {playlist.Name}**: {playlist.SongCount} song{(playlist.SongCount > 1 ? "s" : "")}\r\n");
+                count++;
+            }
 
             EmbedBuilder builder = new EmbedBuilder()
                     .WithTitle($"{Context.Guild.Name}'s Playlists")
