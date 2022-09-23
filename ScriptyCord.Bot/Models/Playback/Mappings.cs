@@ -20,6 +20,8 @@ namespace ScriptCord.Bot.Models.Playback
             Map(x => x.IsDefault).Column("is_default");
             Map(x => x.AdminOnly).Column("admin_only");
             HasMany(x => x.PlaylistEntries)
+                .Not.LazyLoad()
+                //.Not.ExtraLazyLoad()
                 .Cascade.Delete().Inverse();
         }
     }

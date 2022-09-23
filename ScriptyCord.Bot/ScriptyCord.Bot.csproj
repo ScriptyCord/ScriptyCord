@@ -49,7 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ScriptCord.Core\ScriptCord.Core.csproj" />
+    <ProjectReference Include="..\ScriptyCord.Core\ScriptyCord.Core.csproj" />
   </ItemGroup>
 
 </Project>
