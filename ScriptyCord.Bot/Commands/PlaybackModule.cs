@@ -192,7 +192,7 @@ namespace ScriptCord.Bot.Commands
         public async Task RemovePlaylist([Summary(description: "Name of the playlist")] string name)
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Removing a playlist");
-            await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "remove-playlist", "Removing a playlist and its entries. This may take a while depending on user traffic and amount of entries. Please wait..."), ephemeral: true);
+            await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "remove-playlist", "Removing a playlist and its entries. This may take a while depending on user traffic and amount of entries. Please wait..."));
 
             var result = await _playlistService.RemovePlaylist(Context.Guild.Id, name, IsUserGuildAdministrator());
             EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
@@ -212,7 +212,7 @@ namespace ScriptCord.Bot.Commands
         public async Task AddEntry([Summary(description: "Name of the playlist")] string playlistName, [Summary(description: "Link to the video or audio")] string url)
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Adding an entry to a playlist");
-            await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "add-entry", "Adding entry. This may take a while depending on user traffic and audio length. Please wait..."), ephemeral: true);
+            await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "add-entry", "Adding entry. This may take a while depending on user traffic and audio length. Please wait..."));
 
             var result = await _playlistEntriesService.AddEntryFromUrlToPlaylistByName(Context.Guild.Id, playlistName, url);
             EmbedBuilder builder = new EmbedBuilder().WithColor(_modulesEmbedColor);
@@ -237,7 +237,7 @@ namespace ScriptCord.Bot.Commands
         public async Task RemoveEntry([Summary(description: "Name of the playlist")] string playlistName, [Summary(description: "Name of the entry")] string entryName)
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Removing an entry from a playlist");
-            await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "remove-entry", "Removing the entry. This may take a while depending on user traffic. Please wait..."), ephemeral: true);
+            await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "remove-entry", "Removing the entry. This may take a while depending on user traffic. Please wait..."));
 
             var result = await _playlistEntriesService.RemoveEntryFromPlaylistByName(Context.Guild.Id, playlistName, entryName);
             EmbedBuilder builder = new EmbedBuilder().WithColor(_modulesEmbedColor);
@@ -282,7 +282,7 @@ namespace ScriptCord.Bot.Commands
                 embedBuilder.WithDescription("Joining your voice channel...");
 
             // TODO: First check if already connected to the current voice channel or another one
-            await RespondAsync(embed: embedBuilder.Build(), ephemeral: true);
+            await RespondAsync(embed: embedBuilder.Build());
 
             if (channel is not null)
             {
@@ -345,7 +345,7 @@ namespace ScriptCord.Bot.Commands
             else
                 embedBuilder.WithDescription("Pausing playback...");
 
-            await RespondAsync(embed: embedBuilder.Build(), ephemeral: true);
+            await RespondAsync(embed: embedBuilder.Build());
             if (channel is not null)
             {
                 PauseSongEvent pauseSongEvent = new PauseSongEvent(Context.Guild.Id);
@@ -372,7 +372,7 @@ namespace ScriptCord.Bot.Commands
             else
                 embedBuilder.WithDescription("Unpausing playback...");
 
-            await RespondAsync(embed: embedBuilder.Build(), ephemeral: true);
+            await RespondAsync(embed: embedBuilder.Build());
             if (channel is not null)
             {
                 UnpauseSongEvent unpauseSongEvent = new UnpauseSongEvent(Context.Guild.Id);
