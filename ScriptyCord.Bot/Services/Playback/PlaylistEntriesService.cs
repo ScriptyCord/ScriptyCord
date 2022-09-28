@@ -27,6 +27,8 @@ namespace ScriptCord.Bot.Services.Playback
         private readonly ILoggerFacade<IPlaylistEntriesService> _logger;
         private readonly IConfiguration _configuration;
 
+        private static readonly Semaphore _createRemoveSemaphore = new Semaphore(1, 1);
+
         public PlaylistEntriesService(
             ILoggerFacade<IPlaylistEntriesService> logger, 
             IPlaylistRepository playlistRepository, 
@@ -63,6 +65,8 @@ namespace ScriptCord.Bot.Services.Playback
             if (metadata.AudioLength > TimeSpan.FromMinutes(35).TotalMilliseconds)
                 return Result.Failure<AudioMetadataDto>($"Audio can't be longer than 35 minutes");
 
+            _createRemoveSemaphore.WaitOne();
+
             var checkIfAlreadyDownloadedResult = await _playlistEntriesRepository.CountAsync(x => x.SourceIdentifier == metadata.SourceId);
             if (checkIfAlreadyDownloadedResult.IsFailure)
             {
@@ -92,6 +96,8 @@ namespace ScriptCord.Bot.Services.Playback
             else
                 return Result.Failure<AudioMetadataDto>("Entry was already in the playlist");
 
+            _createRemoveSemaphore.Release(releaseCount: 1);
+
             return Result.Success(metadata);
         }
 
@@ -110,6 +116,7 @@ namespace ScriptCord.Bot.Services.Playback
             PlaylistEntry entry = null;
             try
             {
+                _createRemoveSemaphore.WaitOne();
                 entry = playlist.PlaylistEntries.First(x => x.Title == entryName);
             }
             catch (Exception e)
@@ -153,6 +160,8 @@ namespace ScriptCord.Bot.Services.Playback
                     return Result.Success(metadata); // This error doesn't concern the user
                 }
             }
+
+            _createRemoveSemaphore.Release(releaseCount: 1);
 
             return Result.Success(metadata);
         }
