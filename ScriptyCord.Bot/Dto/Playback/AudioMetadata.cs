@@ -20,4 +20,11 @@ namespace ScriptCord.Bot.Dto.Playback
 
         public string Url { get; set; }
     }
+
+    public class InternetPlaylistMetadataDto
+    {
+        public string Title { get; set; }
+
+        public IEnumerable<AudioMetadataDto> Entries { get; set; }
+    }
 }

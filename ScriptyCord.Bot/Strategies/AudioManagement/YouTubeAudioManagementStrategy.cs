@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YoutubeExplode;
+using YoutubeExplode.Common;
 using YoutubeExplode.Converter;
 
 namespace ScriptCord.Bot.Strategies.AudioManagement
@@ -55,6 +56,24 @@ namespace ScriptCord.Bot.Strategies.AudioManagement
                 SourceId = video.Id,
                 Url = url
             };
+        }
+
+        public async Task<InternetPlaylistMetadataDto> ExtractPlaylistMetadata(string playlistUrl)
+        {
+            var playlist = await _client.Playlists.GetAsync(playlistUrl);
+
+            InternetPlaylistMetadataDto dto = new InternetPlaylistMetadataDto();
+            dto.Title = playlist.Title;
+            IList<AudioMetadataDto> entries = new List<AudioMetadataDto>();
+
+            var videos = await _client.Playlists.GetVideosAsync(playlistUrl);
+            foreach (var entry in videos)
+            {
+                entries.Add(await ExtractMetadataFromUrl(entry.Url));
+            }
+
+            dto.Entries = entries;
+            return dto;
         }
 
         public string GenerateFileNameFromMetadata(AudioMetadataDto metadata)

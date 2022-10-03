@@ -11,12 +11,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static NHibernate.Loader.Custom.CustomLoader;
 
 namespace ScriptCord.Bot.Services.Playback
 {
     public interface IPlaylistEntriesService
     {
         Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(ulong guildId, string playlistName, string url, bool isAdmin = false);
+        Task<Result> AddEntriesFromPlaylistUrl(ulong guildId, string playlistName, string url, Action<int, int, AudioMetadataDto> progressUpdate, bool isAdmin = false);
         Task<Result<AudioMetadataDto>> RemoveEntryFromPlaylistByName(ulong guildId, string playlistName, string entryName, bool isAdmin = false);
     }
 
@@ -101,6 +103,65 @@ namespace ScriptCord.Bot.Services.Playback
             return Result.Success(metadata);
         }
 
+        public async Task<Result> AddEntriesFromPlaylistUrl(ulong guildId, string playlistName, string url, Action<int, int, AudioMetadataDto> progressUpdate, bool isAdmin = false)
+        {
+            var playlistResult = await _playlistRepository.GetSingleAsync(x => x.GuildId == guildId && x.Name == playlistName);
+            if (playlistResult.IsFailure)
+            {
+                _logger.LogError(playlistResult);
+                return Result.Failure<AudioMetadataDto>($"Unable to find playlist named {playlistName}");
+            }
+            var playlist = playlistResult.Value;
+            if (playlist.AdminOnly && !isAdmin)
+                return Result.Failure<AudioMetadataDto>($"You must be the administrator of the guild to add an entry to this playlist");
+
+            var strategyResult = GetSuitableStrategyByUrl(url);
+            if (strategyResult.IsFailure)
+                return Result.Failure(strategyResult.Error);
+            IAudioManagementStrategy strategy = strategyResult.Value;
+            InternetPlaylistMetadataDto playlistMetadata = await strategy.ExtractPlaylistMetadata(url);
+
+            _createRemoveSemaphore.WaitOne();
+
+            int i = 0;
+            foreach(var metadata in playlistMetadata.Entries)
+            {
+                i++;
+                var checkIfAlreadyDownloadedResult = await _playlistEntriesRepository.CountAsync(x => x.SourceIdentifier == metadata.SourceId);
+                if (checkIfAlreadyDownloadedResult.IsFailure)
+                {
+                    _logger.LogError(checkIfAlreadyDownloadedResult);
+                    return Result.Failure<AudioMetadataDto>($"Unexpected error occurred when trying to check if file already downloaded");
+                }
+                if (checkIfAlreadyDownloadedResult.Value == 0)
+                {
+                    Result audioDownloadResult = await strategy.DownloadAudio(metadata);
+                    if (audioDownloadResult.IsFailure)
+                    {
+                        _logger.LogError(audioDownloadResult);
+                        return Result.Failure<AudioMetadataDto>(audioDownloadResult.Error);
+                    }
+                }
+
+                if (playlist.PlaylistEntries.Count(x => x.SourceIdentifier == metadata.SourceId) == 0)
+                {
+                    PlaylistEntry newEntry = new PlaylistEntry { Playlist = playlist, UploadTimestamp = DateTime.UtcNow, Title = metadata.Title, Source = metadata.SourceType, SourceIdentifier = metadata.SourceId, AudioLength = metadata.AudioLength };
+                    var result = await _playlistEntriesRepository.SaveAsync(newEntry);
+                    if (result.IsFailure)
+                    {
+                        _logger.LogError(result);
+                        return Result.Failure<AudioMetadataDto>(result.Error);
+                    }
+                }
+
+                progressUpdate(i, playlistMetadata.Entries.Count(), metadata);
+            }
+
+            _createRemoveSemaphore.Release(releaseCount: 1);
+
+            return Result.Success();
+        }
+
         public async Task<Result<AudioMetadataDto>> RemoveEntryFromPlaylistByName(ulong guildId, string playlistName, string entryName, bool isAdmin = false)
         {
             var playlistResult = await _playlistRepository.GetSingleAsync(x => x.GuildId == guildId && x.Name == playlistName);
@@ -169,7 +230,7 @@ namespace ScriptCord.Bot.Services.Playback
         private Result<IAudioManagementStrategy> GetSuitableStrategyByUrl(string url)
         {
             IAudioManagementStrategy audioManagementStrategy = null;
-            if (url.StartsWith("https://www.youtube.com/") || url.StartsWith("https://youtu.be/") || url.StartsWith("https://m.youtube.com/"))
+            if (url.StartsWith("https://www.youtube.com/") || url.StartsWith("https://youtu.be/") || url.StartsWith("https://m.youtube.com/") || url.StartsWith("https://youtube.com/"))
                 audioManagementStrategy = new YouTubeAudioManagementStrategy(_configuration);
             else
             {
