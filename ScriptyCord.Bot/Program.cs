@@ -80,6 +80,10 @@ namespace ScriptCord.Bot
                 System.Environment.Exit(0);
             };
 
+            while (client.ConnectionState != ConnectionState.Connected)
+                Thread.Sleep(100);
+
+            _logger.SetupDiscordLogging(config, client, "general");
             await Task.Delay(Timeout.Infinite);
         }
 
