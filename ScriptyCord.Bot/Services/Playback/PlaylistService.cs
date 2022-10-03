@@ -2,6 +2,7 @@
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 using ScriptCord.Bot.Dto.Playback;
 using ScriptCord.Bot.Models.Playback;
 using ScriptCord.Bot.Repositories;
@@ -29,6 +30,7 @@ namespace ScriptCord.Bot.Services.Playback
         Task<Result> RemovePlaylist(ulong guildId, string playlistName, bool isAdmin = false);
         Task<Result<IList<PlaylistEntryDto>>> GetShuffledEntries(ulong guildId, string playlistName, bool isAdmin = false);
         Task<Result<AudioMetadataDto>> GetCurrentlyPlayingMetadata(ulong guildId);
+        Task<Result<string>> ExportPlaylistToJson(ulong guildId, string playlistName, bool isAdmin = false);
     }
 
     public class PlaylistService : IPlaylistService
@@ -294,6 +296,41 @@ namespace ScriptCord.Bot.Services.Playback
             shuffler.Shuffle();
 
             return Result.Success(playlistEntries);
+        }
+
+        public async Task<Result<string>> ExportPlaylistToJson(ulong guildId, string playlistName, bool isAdmin = false)
+        {
+            var modelResult = await _playlistRepository.GetSingleAsync(x => x.GuildId == guildId && x.Name == playlistName);
+            if (modelResult.IsFailure)
+            {
+                _logger.LogError(modelResult);
+                return Result.Failure<string>("Unexpected error occurred while finding the playlist");
+            }
+            else if (modelResult.Value == null)
+                return Result.Failure<string>("Specified playlist does not exist in this server");
+            else if (modelResult.Value.PlaylistEntries.Count == 0)
+                return Result.Failure<string>("Playlist is empty nothing to shuffle");
+            else if (modelResult.Value.AdminOnly && !isAdmin)
+                return Result.Failure<string>("Only an admin can use this playlist");
+
+            Playlist playlist = modelResult.Value;
+
+            JArray entryArrayJson = new JArray();
+            foreach (var entry in playlist.PlaylistEntries)
+            {
+                entryArrayJson.Add(new JObject(
+                    new JProperty("source", entry.Source),
+                    new JProperty("sourceIdentifier", entry.SourceIdentifier),
+                    new JProperty("title", entry.Title)
+                ));
+            }
+
+            JObject playlistJson = new JObject(
+                new JProperty("name", playlist.Name),
+                new JProperty("entries", entryArrayJson)
+            );
+
+            return Result.Success(playlistJson.ToString());
         }
 
         public async Task<Result<AudioMetadataDto>> GetCurrentlyPlayingMetadata(ulong guildId)

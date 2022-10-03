@@ -71,8 +71,16 @@ namespace ScriptCord.Bot
 
         public Task LogAsync(LogMessage log)
         {
-            _discordSeverityLogProxy[log.Severity](log.Message);
-            _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {log.Message}`");
+            if (log.Exception == null)
+            {
+                _discordSeverityLogProxy[log.Severity](log.Message);
+                _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {log.Message}`");
+            }
+            else
+            {
+                _discordSeverityLogProxy[log.Severity]($"{log.Message} {log.Exception.Message}");
+                _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {log.Message} {log.Exception.Message}`");
+            }
             return Task.CompletedTask;
         }
 

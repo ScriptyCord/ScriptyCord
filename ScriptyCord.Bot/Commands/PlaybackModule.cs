@@ -204,6 +204,25 @@ namespace ScriptCord.Bot.Commands
             await FollowupAsync(embed: embedBuilder.Build());
         }
 
+        [SlashCommand("export-playlist", "Export a given playlist to a json file.")]
+        public async Task ExportPlaylist([Summary(description: "Name of the playlist")] string name)
+        {
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Exporting a playlist to json");
+            var result = await _playlistService.ExportPlaylistToJson(Context.Guild.Id, name, IsUserGuildAdministrator());
+
+            if (result.IsFailure)
+            {
+                EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+                embedBuilder.WithTitle("Failure").WithDescription($"Failed to export the specified playlist: {result.Error}");
+                await ReplyAsync(embed: embedBuilder.Build());
+            }
+            else
+            {
+                MemoryStream outputStream = new MemoryStream(Encoding.UTF8.GetBytes(result.Value));
+                string playlistExportName = $"{name}.json";
+                await RespondWithFileAsync(outputStream, playlistExportName);
+            }
+        }
         #endregion PlaylistManagement
 
         #region EntriesManagement
@@ -221,8 +240,8 @@ namespace ScriptCord.Bot.Commands
             {
                 var metadata = result.Value;
                 builder.WithTitle("Success")
-                    .WithThumbnailUrl(metadata.Thumbnail)
-                    .WithDescription($"Successfully added '{metadata.Title}' from {metadata.SourceType} to '{playlistName}'.");
+                    .WithDescription($"Successfully added **'{metadata.Title}'** from {metadata.SourceType} to **'{playlistName}'**.")
+                    .WithImageUrl(metadata.Thumbnail);
             }
             else
             {
@@ -231,6 +250,36 @@ namespace ScriptCord.Bot.Commands
             }
 
             await FollowupAsync(embed: builder.Build());
+        }
+
+        [SlashCommand("add-entries-from-playlist", "Adds all entries from a specified playlist url")]
+        public async Task AddEntriesFromPlaylist([Summary(description: "Name of the playlist")] string playlistName, [Summary(description: "Url of a playlist")] string url)
+        {
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Adding entries to a playlist from a specified playlist url ({url})");
+
+            await RespondAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Adding entries from internet playlist: {url}").Build());
+            var message = await ReplyAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Download progress: (loading playlist data)").Build());
+            var result = await _playlistEntriesService.AddEntriesFromPlaylistUrl(Context.Guild.Id, playlistName, url, async (downloadedCount, totalCount, currentMetadata) =>
+            {
+                string description = $"Downloaded: ' **{currentMetadata.Title} **'";
+                if (downloadedCount == totalCount)
+                    description += ".\r\n*All entries have been successfully added.*";
+
+                await message.ModifyAsync((x) => 
+                { 
+                    x.Embed = new EmbedBuilder()
+                    .WithColor(_modulesEmbedColor)
+                    .WithTitle($"Download progress: {downloadedCount}/{totalCount}")
+                    .WithDescription(description)
+                    .WithCurrentTimestamp()
+                    .WithImageUrl(currentMetadata.Thumbnail)
+                    .Build();
+                });
+            }, IsUserGuildAdministrator());
+            if (result.IsFailure)
+            {
+                await FollowupAsync(embed: new EmbedBuilder().WithTitle("Failure").WithDescription($"Failed to add entries from {url}").Build());
+            }
         }
 
         [SlashCommand("remove-entry", "Removes an entry from the specified playlist")]
