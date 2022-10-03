@@ -204,6 +204,25 @@ namespace ScriptCord.Bot.Commands
             await FollowupAsync(embed: embedBuilder.Build());
         }
 
+        [SlashCommand("export-playlist", "Export a given playlist to a json file.")]
+        public async Task ExportPlaylist([Summary(description: "Name of the playlist")] string name)
+        {
+            _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Exporting a playlist to json");
+            var result = await _playlistService.ExportPlaylistToJson(Context.Guild.Id, name, IsUserGuildAdministrator());
+
+            if (result.IsFailure)
+            {
+                EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+                embedBuilder.WithTitle("Failure").WithDescription($"Failed to export the specified playlist: {result.Error}");
+                await ReplyAsync(embed: embedBuilder.Build());
+            }
+            else
+            {
+                MemoryStream outputStream = new MemoryStream(Encoding.UTF8.GetBytes(result.Value));
+                string playlistExportName = $"{name}.json";
+                await RespondWithFileAsync(outputStream, playlistExportName);
+            }
+        }
         #endregion PlaylistManagement
 
         #region EntriesManagement
