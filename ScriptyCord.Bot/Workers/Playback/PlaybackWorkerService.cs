@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.Threading;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using ScriptyCord.Bot.Events.Playback;
 
 namespace ScriptCord.Bot.Workers.Playback
 {
@@ -55,22 +56,27 @@ namespace ScriptCord.Bot.Workers.Playback
                     var playbackEvent = Events.Dequeue();
                     executed++;
 
-                    if (playbackEvent is PlaySongEvent)
+                    if (playbackEvent is PlaySongEvent && !_sessions.ContainsKey(playbackEvent.GuildId))
                     {
                         var castedEvent = (PlaySongEvent)playbackEvent;
                         _sessions[playbackEvent.GuildId] = new PlaybackSession(castedEvent.Playlist, castedEvent.Client, castedEvent.GuildId);
                         _sessions[playbackEvent.GuildId].StartPlaybackThread();
                     }
-                    else if (playbackEvent is SkipSongEvent)
-                        _sessions[playbackEvent.GuildId]?.SkipSong();
-                    else if (playbackEvent is PauseSongEvent)
-                        _sessions[playbackEvent.GuildId]?.PausePlayback();
-                    else if (playbackEvent is UnpauseSongEvent)
-                        _sessions[playbackEvent.GuildId]?.UnpausePlayback();
-                    else if (playbackEvent is StopPlaybackEvent)
+                    else if (_sessions.ContainsKey(playbackEvent.GuildId))
                     {
-                        _sessions[playbackEvent.GuildId]?.StopPlaybackThread();
-                        _sessions.Remove(playbackEvent.GuildId);
+                        if (playbackEvent is SkipSongEvent)
+                            _sessions[playbackEvent.GuildId].SkipSong();
+                        else if (playbackEvent is PauseSongEvent)
+                            _sessions[playbackEvent.GuildId].PausePlayback();
+                        else if (playbackEvent is UnpauseSongEvent)
+                            _sessions[playbackEvent.GuildId].UnpausePlayback();
+                        else if (playbackEvent is StopPlaybackEvent)
+                        {
+                            _sessions[playbackEvent.GuildId].StopPlaybackThread();
+                            _sessions.Remove(playbackEvent.GuildId);
+                        }
+                        else if (playbackEvent is AppendSongsEvent)
+                            _sessions[playbackEvent.GuildId].AppendSongs(((AppendSongsEvent)playbackEvent).NewEntries);
                     }
                 }
 
@@ -153,14 +159,28 @@ namespace ScriptCord.Bot.Workers.Playback
                 _cancellationTokenSource.Cancel();
             }
 
+            public void AppendSongs(IList<PlaylistEntryDto> newEntries)
+            {
+                _playlistEditSemaphore.WaitOne();
+
+                foreach (var entry in newEntries)
+                    //_playlist.Append(entry);
+                    _playlist.Add(entry);
+
+                _playlistEditSemaphore.Release(releaseCount: 1);
+            }
+
             public PlaylistEntryDto GetCurrentlyPlayingEntry() => _playlist[0];
 
             public TimeSpan GetTimeSinceEntryStart() => DateTime.Now - _startedCurrentEntryAt;
+
+            private Semaphore _playlistEditSemaphore = new Semaphore(1, 1);
 
             private async Task PlayInBackground()
             {
                 while (_playlist.Count > 0)
                 {
+                    _playlistEditSemaphore.WaitOne();
                     if (_stopPlayback)
                         break;
 
@@ -169,6 +189,7 @@ namespace ScriptCord.Bot.Workers.Playback
                         while (_pausePlayback)
                             Thread.Sleep(1000);
                     }
+                    _playlistEditSemaphore.Release(releaseCount: 1);
 
                     var currentEntry = _playlist[0];
 
@@ -190,8 +211,10 @@ namespace ScriptCord.Bot.Workers.Playback
                         finally { await stream.FlushAsync();  }
                     }
 
+                    _playlistEditSemaphore.WaitOne();
                     if (!_pausePlayback)
                         _playlist.RemoveAt(0);
+                    _playlistEditSemaphore.Release(releaseCount: 1);
                 }
                 PlaybackWorker.Events.Enqueue(new StopPlaybackEvent(_guildId));
                 await _client.StopAsync();

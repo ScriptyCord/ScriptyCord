@@ -6,9 +6,12 @@ using ScriptCord.Bot.Dto.Playback;
 using ScriptCord.Bot.Models.Playback;
 using ScriptCord.Bot.Repositories.Playback;
 using ScriptCord.Bot.Strategies.AudioManagement;
+using ScriptCord.Bot.Workers.Playback;
+using ScriptyCord.Bot.Events.Playback;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Joins;
 using System.Text;
 using System.Threading.Tasks;
 using static NHibernate.Loader.Custom.CustomLoader;
@@ -85,9 +88,10 @@ namespace ScriptCord.Bot.Services.Playback
                 }
             }
 
+            PlaylistEntry newEntry = null;
             if (playlist.PlaylistEntries.Count(x => x.SourceIdentifier == metadata.SourceId) == 0)
             {
-                PlaylistEntry newEntry = new PlaylistEntry { Playlist = playlist, UploadTimestamp = DateTime.UtcNow, Title = metadata.Title, Source = metadata.SourceType, SourceIdentifier = metadata.SourceId, AudioLength = metadata.AudioLength };
+                newEntry = new PlaylistEntry { Playlist = playlist, UploadTimestamp = DateTime.UtcNow, Title = metadata.Title, Source = metadata.SourceType, SourceIdentifier = metadata.SourceId, AudioLength = metadata.AudioLength };
                 var result = await _playlistEntriesRepository.SaveAsync(newEntry);
                 if (result.IsFailure)
                 {
@@ -99,6 +103,12 @@ namespace ScriptCord.Bot.Services.Playback
                 return Result.Failure<AudioMetadataDto>("Entry was already in the playlist");
 
             _createRemoveSemaphore.Release(releaseCount: 1);
+
+            var baseFolder = _configuration.GetSection("store").GetValue<string>("audioPath");
+            var filename = strategy.GenerateFileNameFromMetadata(metadata);
+            var filepath = $"./{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("defaultAudioExtension")}";
+            PlaylistEntryDto playlistEntry = new PlaylistEntryDto(newEntry.Id, newEntry.Title, newEntry.AudioLength, filepath);
+            PlaybackWorker.Events.Enqueue(new AppendSongsEvent(new List<PlaylistEntryDto> { playlistEntry }, guildId));
 
             return Result.Success(metadata);
         }
@@ -123,6 +133,8 @@ namespace ScriptCord.Bot.Services.Playback
 
             _createRemoveSemaphore.WaitOne();
 
+            IList<PlaylistEntryDto> playlistEntries = new List<PlaylistEntryDto>();
+            var baseFolder = _configuration.GetSection("store").GetValue<string>("audioPath");
             int i = 0;
             foreach(var metadata in playlistMetadata.Entries)
             {
@@ -143,9 +155,10 @@ namespace ScriptCord.Bot.Services.Playback
                     }
                 }
 
+                PlaylistEntry newEntry = null;
                 if (playlist.PlaylistEntries.Count(x => x.SourceIdentifier == metadata.SourceId) == 0)
                 {
-                    PlaylistEntry newEntry = new PlaylistEntry { Playlist = playlist, UploadTimestamp = DateTime.UtcNow, Title = metadata.Title, Source = metadata.SourceType, SourceIdentifier = metadata.SourceId, AudioLength = metadata.AudioLength };
+                    newEntry = new PlaylistEntry { Playlist = playlist, UploadTimestamp = DateTime.UtcNow, Title = metadata.Title, Source = metadata.SourceType, SourceIdentifier = metadata.SourceId, AudioLength = metadata.AudioLength };
                     var result = await _playlistEntriesRepository.SaveAsync(newEntry);
                     if (result.IsFailure)
                     {
@@ -155,9 +168,16 @@ namespace ScriptCord.Bot.Services.Playback
                 }
 
                 progressUpdate(i, playlistMetadata.Entries.Count(), metadata);
+
+                var filename = strategy.GenerateFileNameFromMetadata(metadata);
+                var filepath = $"./{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("defaultAudioExtension")}";
+                PlaylistEntryDto playlistEntry = new PlaylistEntryDto(newEntry.Id, newEntry.Title, newEntry.AudioLength, filepath);
+                playlistEntries.Add(playlistEntry);
             }
 
             _createRemoveSemaphore.Release(releaseCount: 1);
+
+            PlaybackWorker.Events.Enqueue(new AppendSongsEvent(playlistEntries, guildId));
 
             return Result.Success();
         }
