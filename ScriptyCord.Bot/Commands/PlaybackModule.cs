@@ -261,6 +261,9 @@ namespace ScriptCord.Bot.Commands
             var message = await ReplyAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Download progress: (loading playlist data)").Build());
             var result = await _playlistEntriesService.AddEntriesFromPlaylistUrl(Context.Guild.Id, playlistName, url, async (downloadedCount, totalCount, currentMetadata) =>
             {
+                if (downloadedCount == totalCount)
+                    return;
+
                 string description = $"Downloaded: '**{currentMetadata.Title}**'";
 
                 await message.ModifyAsync((x) => 
