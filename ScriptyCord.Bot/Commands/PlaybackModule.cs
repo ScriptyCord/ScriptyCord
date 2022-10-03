@@ -240,8 +240,8 @@ namespace ScriptCord.Bot.Commands
             {
                 var metadata = result.Value;
                 builder.WithTitle("Success")
-                    .WithThumbnailUrl(metadata.Thumbnail)
-                    .WithDescription($"Successfully added '{metadata.Title}' from {metadata.SourceType} to '{playlistName}'.");
+                    .WithDescription($"Successfully added **'{metadata.Title}'** from {metadata.SourceType} to **'{playlistName}'**.")
+                    .WithImageUrl(metadata.Thumbnail);
             }
             else
             {
