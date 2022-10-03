@@ -261,9 +261,7 @@ namespace ScriptCord.Bot.Commands
             var message = await ReplyAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Download progress: (loading playlist data)").Build());
             var result = await _playlistEntriesService.AddEntriesFromPlaylistUrl(Context.Guild.Id, playlistName, url, async (downloadedCount, totalCount, currentMetadata) =>
             {
-                string description = $"Downloaded: ' **{currentMetadata.Title} **'";
-                if (downloadedCount == totalCount)
-                    description += ".\r\n*All entries have been successfully added.*";
+                string description = $"Downloaded: '**{currentMetadata.Title}**'";
 
                 await message.ModifyAsync((x) => 
                 { 
@@ -275,7 +273,23 @@ namespace ScriptCord.Bot.Commands
                     .WithImageUrl(currentMetadata.Thumbnail)
                     .Build();
                 });
-            }, IsUserGuildAdministrator());
+            }, 
+            async (finalDownloadedCount, lastMetadata) => 
+            {
+                string description = $"Added {finalDownloadedCount} entries to playlist in total\r\n\r\n*All entries have been successfully added.*";
+
+                await message.ModifyAsync((x) =>
+                {
+                    x.Embed = new EmbedBuilder()
+                    .WithColor(Discord.Color.Green)
+                    .WithTitle($"Success")
+                    .WithDescription(description)
+                    .WithCurrentTimestamp()
+                    .WithImageUrl(lastMetadata.Thumbnail)
+                    .Build();
+                });
+            },
+            IsUserGuildAdministrator());
             if (result.IsFailure)
             {
                 await FollowupAsync(embed: new EmbedBuilder().WithTitle("Failure").WithDescription($"Failed to add entries from {url}").Build());

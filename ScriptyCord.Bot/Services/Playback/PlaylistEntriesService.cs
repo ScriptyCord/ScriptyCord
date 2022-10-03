@@ -21,7 +21,7 @@ namespace ScriptCord.Bot.Services.Playback
     public interface IPlaylistEntriesService
     {
         Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(ulong guildId, string playlistName, string url, bool isAdmin = false);
-        Task<Result> AddEntriesFromPlaylistUrl(ulong guildId, string playlistName, string url, Action<int, int, AudioMetadataDto> progressUpdate, bool isAdmin = false);
+        Task<Result> AddEntriesFromPlaylistUrl(ulong guildId, string playlistName, string url, Action<int, int, AudioMetadataDto> progressUpdate, Action<int, AudioMetadataDto> finalAction, bool isAdmin = false);
         Task<Result<AudioMetadataDto>> RemoveEntryFromPlaylistByName(ulong guildId, string playlistName, string entryName, bool isAdmin = false);
     }
 
@@ -113,7 +113,7 @@ namespace ScriptCord.Bot.Services.Playback
             return Result.Success(metadata);
         }
 
-        public async Task<Result> AddEntriesFromPlaylistUrl(ulong guildId, string playlistName, string url, Action<int, int, AudioMetadataDto> progressUpdate, bool isAdmin = false)
+        public async Task<Result> AddEntriesFromPlaylistUrl(ulong guildId, string playlistName, string url, Action<int, int, AudioMetadataDto> progressUpdate, Action<int, AudioMetadataDto> finalAction, bool isAdmin = false)
         {
             var playlistResult = await _playlistRepository.GetSingleAsync(x => x.GuildId == guildId && x.Name == playlistName);
             if (playlistResult.IsFailure)
@@ -136,6 +136,7 @@ namespace ScriptCord.Bot.Services.Playback
             IList<PlaylistEntryDto> playlistEntries = new List<PlaylistEntryDto>();
             var baseFolder = _configuration.GetSection("store").GetValue<string>("audioPath");
             int i = 0;
+            int downloaded = 0;
             foreach(var metadata in playlistMetadata.Entries)
             {
                 i++;
@@ -165,17 +166,20 @@ namespace ScriptCord.Bot.Services.Playback
                         _logger.LogError(result);
                         return Result.Failure<AudioMetadataDto>(result.Error);
                     }
+
+                    var filename = strategy.GenerateFileNameFromMetadata(metadata);
+                    var filepath = $"./{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("defaultAudioExtension")}";
+                    PlaylistEntryDto playlistEntry = new PlaylistEntryDto(newEntry.Id, newEntry.Title, newEntry.AudioLength, filepath);
+                    playlistEntries.Add(playlistEntry);
+
+                    downloaded++;
+                    progressUpdate(i, playlistMetadata.Entries.Count(), metadata);
                 }
-
-                progressUpdate(i, playlistMetadata.Entries.Count(), metadata);
-
-                var filename = strategy.GenerateFileNameFromMetadata(metadata);
-                var filepath = $"./{baseFolder}{filename}.{_configuration.GetSection("store").GetValue<string>("defaultAudioExtension")}";
-                PlaylistEntryDto playlistEntry = new PlaylistEntryDto(newEntry.Id, newEntry.Title, newEntry.AudioLength, filepath);
-                playlistEntries.Add(playlistEntry);
             }
 
             _createRemoveSemaphore.Release(releaseCount: 1);
+
+            finalAction(downloaded, playlistMetadata.Entries.Last());
 
             PlaybackWorker.Events.Enqueue(new AppendSongsEvent(playlistEntries, guildId));
 
