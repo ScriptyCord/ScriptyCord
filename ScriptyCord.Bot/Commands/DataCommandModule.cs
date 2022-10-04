@@ -6,6 +6,7 @@ using ScriptCord.Bot;
 using ScriptCord.Core.DiscordExtensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -31,10 +32,19 @@ namespace ScriptyCord.Bot.Commands
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Showing instance info");
             DateTime buildTime = GetLinkerTime(Assembly.GetEntryAssembly());
+
+            List<EmbedFieldBuilder> fields = new List<EmbedFieldBuilder>();
+            fields.Add(new EmbedFieldBuilder().WithName("Environment Type").WithValue(Environment.GetEnvironmentVariable("ENVIRONMENT_TYPE")));
+            fields.Add(new EmbedFieldBuilder().WithName("Architecture").WithValue(RuntimeInformation.OSArchitecture));
+            fields.Add(new EmbedFieldBuilder().WithName("Operating System").WithValue(RuntimeInformation.OSDescription));
+            fields.Add(new EmbedFieldBuilder().WithName("Built at").WithValue($"{buildTime} UTC"));
+            fields.Add(new EmbedFieldBuilder().WithName("Running for").WithValue(DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime()));
+
             EmbedBuilder embedBuilder = new EmbedBuilder()
                 .WithColor(_modulesEmbedColor)
                 .WithTitle($"ScriptyCord Version: {Program.Version}")
-                .WithDescription($"Running in '{Environment.GetEnvironmentVariable("ENVIRONMENT_TYPE")}' environment on {RuntimeInformation.OSArchitecture} {RuntimeInformation.OSDescription}, built at {buildTime}.");
+                .WithImageUrl(Context.Client.CurrentUser.GetAvatarUrl())
+                .WithFields(fields);
 
             await RespondAsync(embed: embedBuilder.Build());
         }
