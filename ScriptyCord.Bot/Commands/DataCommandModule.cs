@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using ScriptCord.Bot;
+using ScriptCord.Bot.Workers.Playback;
 using ScriptCord.Core.DiscordExtensions;
 using System;
 using System.Collections.Generic;
@@ -20,11 +21,13 @@ namespace ScriptyCord.Bot.Commands
     {
         private new readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkPurple;
         private readonly ILoggerFacade<DataCommandModule> _logger;
+        private readonly PlaybackWorker _playbackWorker;
 
-        public DataCommandModule(ILoggerFacade<DataCommandModule> logger, DiscordSocketClient client, IConfiguration configuration)
+        public DataCommandModule(ILoggerFacade<DataCommandModule> logger, DiscordSocketClient client, IConfiguration configuration, PlaybackWorker playbackWorker)
         {
             _logger = logger;
             _logger.SetupDiscordLogging(configuration, client, "general");
+            _playbackWorker = playbackWorker;
         }
 
         [SlashCommand("instance-info", "Displays info about the version and build of this bot's instance")]
@@ -39,6 +42,8 @@ namespace ScriptyCord.Bot.Commands
             fields.Add(new EmbedFieldBuilder().WithName("Operating System").WithValue(RuntimeInformation.OSDescription));
             fields.Add(new EmbedFieldBuilder().WithName("Built at").WithValue($"{buildTime} UTC"));
             fields.Add(new EmbedFieldBuilder().WithName("Running for").WithValue(DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime()));
+            fields.Add(new EmbedFieldBuilder().WithName("Server count").WithValue(Context.Client.Guilds.Count));
+            fields.Add(new EmbedFieldBuilder().WithName("Active voice sessions").WithValue(_playbackWorker.GetPlaybackSessionsCount()));
 
             EmbedBuilder embedBuilder = new EmbedBuilder()
                 .WithColor(_modulesEmbedColor)

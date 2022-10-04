@@ -103,6 +103,9 @@ namespace ScriptCord.Bot.Workers.Playback
 
         public TimeSpan GetTimeSinceEntryStart(ulong guildId) => _sessions[guildId].GetTimeSinceEntryStart();
 
+        public int GetPlaybackSessionsCount()
+            => _sessions.Count;
+
         private class PlaybackSession
         {
             private IList<PlaylistEntryDto> _playlist;
