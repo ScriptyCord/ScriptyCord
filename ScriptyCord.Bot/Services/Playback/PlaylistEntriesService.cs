@@ -75,6 +75,7 @@ namespace ScriptCord.Bot.Services.Playback
             var checkIfAlreadyDownloadedResult = await _playlistEntriesRepository.CountAsync(x => x.SourceIdentifier == metadata.SourceId);
             if (checkIfAlreadyDownloadedResult.IsFailure)
             {
+                _createRemoveSemaphore.Release(releaseCount: 1);
                 _logger.LogError(checkIfAlreadyDownloadedResult);
                 return Result.Failure<AudioMetadataDto>($"Unexpected error occurred when trying to check if file already downloaded");
             }
@@ -83,6 +84,7 @@ namespace ScriptCord.Bot.Services.Playback
                 Result audioDownloadResult = await strategy.DownloadAudio(metadata);
                 if (audioDownloadResult.IsFailure)
                 {
+                    _createRemoveSemaphore.Release(releaseCount: 1);
                     _logger.LogError(audioDownloadResult);
                     return Result.Failure<AudioMetadataDto>(audioDownloadResult.Error);
                 }
@@ -95,6 +97,7 @@ namespace ScriptCord.Bot.Services.Playback
                 var result = await _playlistEntriesRepository.SaveAsync(newEntry);
                 if (result.IsFailure)
                 {
+                    _createRemoveSemaphore.Release(releaseCount: 1);
                     _logger.LogError(result);
                     return Result.Failure<AudioMetadataDto>(result.Error);
                 }
@@ -144,6 +147,7 @@ namespace ScriptCord.Bot.Services.Playback
                 if (checkIfAlreadyDownloadedResult.IsFailure)
                 {
                     _logger.LogError(checkIfAlreadyDownloadedResult);
+                    _createRemoveSemaphore.Release(releaseCount: 1);
                     return Result.Failure<AudioMetadataDto>($"Unexpected error occurred when trying to check if file already downloaded");
                 }
                 if (checkIfAlreadyDownloadedResult.Value == 0)
@@ -152,6 +156,7 @@ namespace ScriptCord.Bot.Services.Playback
                     if (audioDownloadResult.IsFailure)
                     {
                         _logger.LogError(audioDownloadResult);
+                        _createRemoveSemaphore.Release(releaseCount: 1);
                         return Result.Failure<AudioMetadataDto>(audioDownloadResult.Error);
                     }
                 }
@@ -164,6 +169,7 @@ namespace ScriptCord.Bot.Services.Playback
                     if (result.IsFailure)
                     {
                         _logger.LogError(result);
+                        _createRemoveSemaphore.Release(releaseCount: 1);
                         return Result.Failure<AudioMetadataDto>(result.Error);
                     }
 
@@ -206,12 +212,16 @@ namespace ScriptCord.Bot.Services.Playback
             }
             catch (Exception e)
             {
+                _createRemoveSemaphore.Release(releaseCount: 1);
                 return Result.Failure<AudioMetadataDto>($"Didn't find an entry named '{entryName}' in playlist '{playlistName}'");
             }
 
             var strategyValue = GetSuitableStrategyBySource(entry.Source);
             if (strategyValue.IsFailure)
+            {
+                _createRemoveSemaphore.Release(releaseCount: 1);
                 return Result.Failure<AudioMetadataDto>(strategyValue.Error);
+            }
 
             IAudioManagementStrategy strategy = strategyValue.Value;
             var metadata = await strategy.GetMetadataBySourceId(entry.SourceIdentifier);
@@ -220,6 +230,7 @@ namespace ScriptCord.Bot.Services.Playback
             Result removeResult = await _playlistEntriesRepository.DeleteAsync(entry);
             if (removeResult.IsFailure)
             {
+                _createRemoveSemaphore.Release(releaseCount: 1);
                 _logger.LogError(removeResult);
                 return Result.Failure<AudioMetadataDto>("Unexpected error while removing an entry from playlist");
             }
@@ -227,6 +238,7 @@ namespace ScriptCord.Bot.Services.Playback
             var checkIfOtherPlaylistUsesFile = await _playlistEntriesRepository.CountAsync(x => x.SourceIdentifier == metadata.SourceId);
             if (checkIfOtherPlaylistUsesFile.IsFailure)
             {
+                _createRemoveSemaphore.Release(releaseCount: 1);
                 _logger.LogError(checkIfOtherPlaylistUsesFile);
                 return Result.Failure<AudioMetadataDto>($"Unexpected error occurred when trying to check if file already downloaded");
             }
@@ -241,6 +253,7 @@ namespace ScriptCord.Bot.Services.Playback
                 }
                 catch (Exception e)
                 {
+                    _createRemoveSemaphore.Release(releaseCount: 1);
                     _logger.LogException(e);
                     return Result.Success(metadata); // This error doesn't concern the user
                 }
