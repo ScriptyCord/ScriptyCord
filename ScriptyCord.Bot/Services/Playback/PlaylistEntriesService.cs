@@ -103,7 +103,10 @@ namespace ScriptCord.Bot.Services.Playback
                 }
             }
             else
+            {
+                _createRemoveSemaphore.Release(releaseCount: 1);
                 return Result.Failure<AudioMetadataDto>("Entry was already in the playlist");
+            }
 
             _createRemoveSemaphore.Release(releaseCount: 1);
 
