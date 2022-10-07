@@ -240,7 +240,7 @@ namespace ScriptCord.Bot.Commands
             {
                 var metadata = result.Value;
                 builder.WithTitle("Success")
-                    .WithDescription($"Successfully added **'{metadata.Title}'** from {metadata.SourceType} to **'{playlistName}'**.")
+                    .WithDescription($"Successfully added **'{metadata.Title}'** from {metadata.SourceType} to **'{playlistName}'**.\r\n*{url}*")
                     .WithImageUrl(metadata.Thumbnail);
             }
             else
@@ -277,9 +277,9 @@ namespace ScriptCord.Bot.Commands
                     .Build();
                 });
             }, 
-            async (finalDownloadedCount, lastMetadata) => 
+            async (finalDownloadedCount, remotePlaylistTotalCount, lastMetadata) => 
             {
-                string description = $"Added {finalDownloadedCount} entries to playlist in total\r\n\r\n*All entries have been successfully added.*";
+                string description = $"All entries from the remote playlist have been successfully added. Added {finalDownloadedCount} out of {remotePlaylistTotalCount} entries (skipped {remotePlaylistTotalCount-finalDownloadedCount} duplicates).\r\n*{url}*";
 
                 await message.ModifyAsync((x) =>
                 {
