@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScriptyCord.Migrations", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScriptyCord.Core", "ScriptyCord.Core\ScriptyCord.Core.csproj", "{0257AC4E-531B-4762-A106-0757DD51DF64}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptyCord.Tests", "ScriptyCord.Tests\ScriptyCord.Tests.csproj", "{5CB18A76-921B-439E-BD0A-7C9A7EE8AE26}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{0257AC4E-531B-4762-A106-0757DD51DF64}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0257AC4E-531B-4762-A106-0757DD51DF64}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0257AC4E-531B-4762-A106-0757DD51DF64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CB18A76-921B-439E-BD0A-7C9A7EE8AE26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CB18A76-921B-439E-BD0A-7C9A7EE8AE26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CB18A76-921B-439E-BD0A-7C9A7EE8AE26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CB18A76-921B-439E-BD0A-7C9A7EE8AE26}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

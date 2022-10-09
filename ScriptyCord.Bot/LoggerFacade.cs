@@ -110,8 +110,8 @@ namespace ScriptCord.Bot
 
         public void LogFatalException(Exception exception)
         {
-            _logger.Log(NLog.LogLevel.Fatal, exception);
             _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {exception.Message}`");
+            _logger.Log(NLog.LogLevel.Fatal, exception);
         }
 
         public void LogDebug(string message)

@@ -62,6 +62,7 @@ namespace ScriptCord.Bot.Services.Playback
             if (playlist.AdminOnly && !isAdmin)
                 return Result.Failure<AudioMetadataDto>($"You must be the administrator of the guild to add an entry to this playlist");
 
+
             Result<IAudioManagementStrategy> strategyResult = GetSuitableStrategyByUrl(url);
             if (strategyResult.IsFailure)
                 return Result.Failure<AudioMetadataDto>(strategyResult.Error);
