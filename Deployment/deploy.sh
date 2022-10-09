@@ -25,11 +25,13 @@ sudo systemctl stop scriptycord-${DEPLOY_ENV}
 sudo systemctl disable --now scriptycord-${DEPLOY_ENV}
 
 # Setup database container
+echo "STEP 1: Checking if database is already set up"
 db_name="scriptycord-db"
 if [ ! "$(docker ps -q -f name=${db_name})" ]; then
     if [ "$(docker ps -aq -f status=exited -f name=${db_name})" ]; then
         docker start $db_name
     else
+        echo "STEP 1.5: Setting up database"
         declare -A connection_values=(['port']='0' ['Password']='')
         connection_string="$(jq .ConnectionStrings.DefaultConnection ../ScriptyCord.Migrations/appsettings.${DEPLOY_ENV}.json)"
         IFS=';' connection_tokens=( $connection_string )
@@ -48,19 +50,30 @@ if [ ! "$(docker ps -q -f name=${db_name})" ]; then
     fi
 fi
 
+# Run tests
+echo "STEP 2: Running tests"
+dotnet ..
+ret=$?
+if [ $ret -ne 0 ]; then
+  exit 1
+fi
+
 # Migrations
+echo "STEP 3: Running migrations"
 echo "Building migrator"
 dotnet build ../ScriptyCord.Migrations/ --os linux --configuration release --output ./Builds/ScriptyCord.Migrations/
 echo "Running migrations"
 cd Builds/ScriptyCord.Migrations/ && ENVIRONMENT_TYPE=$DEPLOY_ENV ./ScriptyCord.Migrations && cd ../../
 
 # Deploy the bot
+echo "STEP 4: Deploying the bot"
 echo "Deploying the bot"
 dotnet publish ../ScriptyCord.Bot/ --os linux --configuration release --output ./Builds/ScriptyCord.Bot/
 mkdir ./Builds/ScriptyCord.Bot/Downloads
 mkdir ./Builds/ScriptyCord.Bot/Downloads/Audio
 
 # Setup systemd service
+echo "STEP 5: Updating systemd service file and restarting the service"
 sudo cp scriptycord-${DEPLOY_ENV}.service /etc/systemd/system/scriptycord-${DEPLOY_ENV}.service
 sudo systemctl enable --now scriptycord-${DEPLOY_ENV}
 sudo systemctl start scriptycord-${DEPLOY_ENV}
