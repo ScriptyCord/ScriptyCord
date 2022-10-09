@@ -233,8 +233,9 @@ namespace ScriptyCord.Bot.Commands.Playback
             if (result.IsSuccess)
             {
                 var metadata = result.Value;
+                string transformedTitle = metadata.Title.Replace("*", "\\*").Replace("|", "\\|").Replace("_", "\\_");
                 builder.WithTitle("Success")
-                    .WithDescription($"Successfully added **'{metadata.Title}'** from {metadata.SourceType} to **'{playlistName}'**.\r\n*{url}*")
+                    .WithDescription($"Successfully added **'{transformedTitle}'** from {metadata.SourceType} to **'{playlistName}'**.\r\n*{url}*")
                     .WithImageUrl(metadata.Thumbnail);
             }
             else
@@ -258,7 +259,8 @@ namespace ScriptyCord.Bot.Commands.Playback
                 if (downloadedCount == totalCount)
                     return;
 
-                string description = $"Downloaded: '**{currentMetadata.Title}**'";
+                string transformedTitle = currentMetadata.Title.Replace("*", "\\*").Replace("|", "\\|").Replace("_", "\\_");
+                string description = $"Downloaded: '**{transformedTitle}**'";
 
                 await message.ModifyAsync((x) =>
                 {
