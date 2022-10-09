@@ -45,7 +45,7 @@ namespace ScriptCord.Bot
             {
                 await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
                 await _interactionService.RegisterCommandsGloballyAsync(true);
-                await _services.GetRequiredService<PlaybackWorker>().Run();
+                await _services.GetRequiredService<IPlaybackWorker>().Run();
             }
             catch (Exception e) 
             {

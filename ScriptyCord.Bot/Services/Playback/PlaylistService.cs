@@ -39,13 +39,13 @@ namespace ScriptCord.Bot.Services.Playback
         private readonly IPlaylistRepository _playlistRepository;
         private readonly IPlaylistEntriesRepository _playlistEntriesRepository;
         private readonly IConfiguration _configuration;
-        private readonly PlaybackWorker _playbackWorker;
+        private readonly IPlaybackWorker _playbackWorker;
 
         public PlaylistService(ILoggerFacade<IPlaylistService> logger, 
             IPlaylistRepository playlistRepository, 
             IPlaylistEntriesRepository playlistEntriesRepository, 
-            IConfiguration configuration, 
-            PlaybackWorker playbackWorker,
+            IConfiguration configuration,
+            IPlaybackWorker playbackWorker,
             DiscordSocketClient client)
         {
             _logger = logger;

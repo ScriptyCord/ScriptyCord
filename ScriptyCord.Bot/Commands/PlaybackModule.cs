@@ -29,9 +29,9 @@ namespace ScriptCord.Bot.Commands
 
         private readonly IPlaylistService _playlistService;
         private readonly IPlaylistEntriesService _playlistEntriesService;
-        private readonly PlaybackWorker _playbackWorkerService;
+        private readonly IPlaybackWorker _playbackWorkerService;
 
-        public PlaybackModule(ILoggerFacade<PlaybackModule> logger, IPlaylistService playlistService, IPlaylistEntriesService playlistEntriesService, PlaybackWorker playbackWorkerService,
+        public PlaybackModule(ILoggerFacade<PlaybackModule> logger, IPlaylistService playlistService, IPlaylistEntriesService playlistEntriesService, IPlaybackWorker playbackWorkerService,
             DiscordSocketClient client, IConfiguration configuration)
         {
             _logger = logger;

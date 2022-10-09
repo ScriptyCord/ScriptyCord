@@ -17,7 +17,15 @@ using ScriptyCord.Bot.Events.Playback;
 
 namespace ScriptCord.Bot.Workers.Playback
 {
-    public class PlaybackWorker : IWorker
+    public interface IPlaybackWorker : IWorker
+    {
+        bool HasPlaybackSession(ulong guildId);
+        PlaylistEntryDto GetPlaybackSessionData(ulong guildId);
+        TimeSpan GetTimeSinceEntryStart(ulong guildId);
+        public int GetPlaybackSessionsCount();
+    }
+
+    public class PlaybackWorker : IPlaybackWorker
     {
         private readonly ILoggerFacade<PlaybackWorker> _logger;
 
@@ -211,7 +219,7 @@ namespace ScriptCord.Bot.Workers.Playback
                         {
                             PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Error, e.Message));
                         }
-                        finally { await stream.FlushAsync();  }
+                        finally { await stream.FlushAsync(); }
                     }
 
                     _playlistEditSemaphore.WaitOne();

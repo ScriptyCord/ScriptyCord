@@ -76,7 +76,7 @@ namespace ScriptCord.Bot
             {
                 _logger.Log(LogLevel.Info, "Gracefully shutting down the bot");
                 services.GetRequiredService<DiscordSocketClient>().Dispose();
-                services.GetRequiredService<PlaybackWorker>().Stop();
+                services.GetRequiredService<IPlaybackWorker>().Stop();
                 System.Environment.Exit(0);
             };
 

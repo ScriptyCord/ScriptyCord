@@ -21,9 +21,9 @@ namespace ScriptyCord.Bot.Commands
     {
         private new readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkPurple;
         private readonly ILoggerFacade<DataCommandModule> _logger;
-        private readonly PlaybackWorker _playbackWorker;
+        private readonly IPlaybackWorker _playbackWorker;
 
-        public DataCommandModule(ILoggerFacade<DataCommandModule> logger, DiscordSocketClient client, IConfiguration configuration, PlaybackWorker playbackWorker)
+        public DataCommandModule(ILoggerFacade<DataCommandModule> logger, DiscordSocketClient client, IConfiguration configuration, IPlaybackWorker playbackWorker)
         {
             _logger = logger;
             _logger.SetupDiscordLogging(configuration, client, "general");

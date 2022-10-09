@@ -63,7 +63,7 @@ namespace ScriptCord.Bot
 
         public void SetupWorkers()
         {
-            _services.AddSingleton<PlaybackWorker>();
+            _services.AddSingleton<IPlaybackWorker, PlaybackWorker>();
         }
 
         public void SetupRepositories(IConfiguration config)
