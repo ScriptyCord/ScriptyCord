@@ -27,7 +27,7 @@ namespace ScriptCord.Bot.Workers.Playback
 
     public class PlaybackWorker : IPlaybackWorker
     {
-        private readonly ILoggerFacade<PlaybackWorker> _logger;
+        private readonly ILoggerFacade<IPlaybackWorker> _logger;
 
         private Thread _thread;
 
@@ -35,16 +35,16 @@ namespace ScriptCord.Bot.Workers.Playback
 
         public static Queue<(NLog.LogLevel, string)> EventLogsQueue { get; } = new Queue<(NLog.LogLevel, string)>();
 
-        private Dictionary<ulong, PlaybackSession> _sessions;
+        private Dictionary<ulong, IPlaybackSession> _sessions;
 
         private bool _stop = false;
 
-        public PlaybackWorker(ILoggerFacade<PlaybackWorker> logger, IConfiguration configuration, DiscordSocketClient client)
+        public PlaybackWorker(ILoggerFacade<IPlaybackWorker> logger, IConfiguration configuration, DiscordSocketClient client)
         {
             _logger = logger;
             _logger.SetupDiscordLogging(configuration, client, "playback");
 
-            _sessions = new Dictionary<ulong, PlaybackSession>();
+            _sessions = new Dictionary<ulong, IPlaybackSession>();
         }
 
         public async Task Run()
@@ -113,134 +113,146 @@ namespace ScriptCord.Bot.Workers.Playback
 
         public int GetPlaybackSessionsCount()
             => _sessions.Count;
+    }
 
-        private class PlaybackSession
+    public interface IPlaybackSession
+    {
+        void StartPlaybackThread();
+        void SkipSong();
+        void PausePlayback();
+        void UnpausePlayback();
+        void StopPlaybackThread();
+        void AppendSongs(IList<PlaylistEntryDto> newEntries);
+        PlaylistEntryDto GetCurrentlyPlayingEntry();
+        TimeSpan GetTimeSinceEntryStart();
+    }
+
+    public class PlaybackSession : IPlaybackSession
+    {
+        private IList<PlaylistEntryDto> _playlist;
+
+        private Thread _playbackThread;
+
+        private IAudioClient _client;
+
+        private CancellationTokenSource _cancellationTokenSource;
+
+        private bool _stopPlayback = false;
+
+        private bool _pausePlayback = false;
+
+        private ulong _guildId;
+
+        private DateTime _startedCurrentEntryAt;
+
+        public PlaybackSession(IList<PlaylistEntryDto> playlist, IAudioClient client, ulong guildId)
         {
-            private IList<PlaylistEntryDto> _playlist;
+            _playlist = playlist;
+            _client = client;
+            _guildId = guildId;
+        }
 
-            private Thread _playbackThread;
+        public void StartPlaybackThread()
+        {
+            _playbackThread = new Thread(new ThreadStart(
+                () =>
+                {
+                    var resultTask = PlayInBackground();
+                    resultTask.Wait();
+                }
+            ));
+            _playbackThread.Start();
+        }
 
-            private IAudioClient _client;
+        public void SkipSong()
+        {
+            _cancellationTokenSource.Cancel();
+        }
 
-            private CancellationTokenSource _cancellationTokenSource;
+        public void PausePlayback()
+        {
+            _pausePlayback = true;
+            _cancellationTokenSource.Cancel();
+        }
 
-            private bool _stopPlayback = false;
+        public void UnpausePlayback() => _pausePlayback = false;
 
-            private bool _pausePlayback = false;
+        public void StopPlaybackThread()
+        {
+            _stopPlayback = true;
+            _cancellationTokenSource.Cancel();
+        }
 
-            private ulong _guildId;
+        public void AppendSongs(IList<PlaylistEntryDto> newEntries)
+        {
+            _playlistEditSemaphore.WaitOne();
 
-            private DateTime _startedCurrentEntryAt;
+            foreach (var entry in newEntries)
+                //_playlist.Append(entry);
+                _playlist.Add(entry);
 
-            public PlaybackSession(IList<PlaylistEntryDto> playlist, IAudioClient client, ulong guildId)
-            {
-                _playlist = playlist;
-                _client = client;
-                _guildId = guildId;
-            }
+            _playlistEditSemaphore.Release(releaseCount: 1);
+        }
 
-            public void StartPlaybackThread()
-            {
-                _playbackThread = new Thread(new ThreadStart(
-                    () =>
-                    {
-                        var resultTask = PlayInBackground();
-                        resultTask.Wait();
-                    }
-                ));
-                _playbackThread.Start();
-            }
+        public PlaylistEntryDto GetCurrentlyPlayingEntry() => _playlist[0];
 
-            public void SkipSong()
-            {
-                _cancellationTokenSource.Cancel();
-            }
+        public TimeSpan GetTimeSinceEntryStart() => DateTime.Now - _startedCurrentEntryAt;
 
-            public void PausePlayback()
-            {
-                _pausePlayback = true;
-                _cancellationTokenSource.Cancel();
-            }
+        private Semaphore _playlistEditSemaphore = new Semaphore(1, 1);
 
-            public void UnpausePlayback() => _pausePlayback = false;
-
-            public void StopPlaybackThread()
-            {
-                _stopPlayback = true;
-                _cancellationTokenSource.Cancel();
-            }
-
-            public void AppendSongs(IList<PlaylistEntryDto> newEntries)
+        private async Task PlayInBackground()
+        {
+            while (_playlist.Count > 0)
             {
                 _playlistEditSemaphore.WaitOne();
+                if (_stopPlayback)
+                    break;
 
-                foreach (var entry in newEntries)
-                    //_playlist.Append(entry);
-                    _playlist.Add(entry);
+                if (_pausePlayback)
+                {
+                    while (_pausePlayback)
+                        Thread.Sleep(1000);
+                }
+                _playlistEditSemaphore.Release(releaseCount: 1);
 
+                var currentEntry = _playlist[0];
+
+                _cancellationTokenSource = new CancellationTokenSource();
+
+                using (var ffmpeg = CreateStream(currentEntry.Path))
+                using (var stream = _client.CreatePCMStream(AudioApplication.Music))
+                {
+                    try
+                    {
+                        _startedCurrentEntryAt = DateTime.Now;
+                        await ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream, _cancellationTokenSource.Token);
+                    }
+                    catch (OperationCanceledException e) { }
+                    catch (Exception e)
+                    {
+                        PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Error, e.Message));
+                    }
+                    finally { await stream.FlushAsync(); }
+                }
+
+                _playlistEditSemaphore.WaitOne();
+                if (!_pausePlayback)
+                    _playlist.RemoveAt(0);
                 _playlistEditSemaphore.Release(releaseCount: 1);
             }
+            PlaybackWorker.Events.Enqueue(new StopPlaybackEvent(_guildId));
+            await _client.StopAsync();
+        }
 
-            public PlaylistEntryDto GetCurrentlyPlayingEntry() => _playlist[0];
-
-            public TimeSpan GetTimeSinceEntryStart() => DateTime.Now - _startedCurrentEntryAt;
-
-            private Semaphore _playlistEditSemaphore = new Semaphore(1, 1);
-
-            private async Task PlayInBackground()
+        private Process CreateStream(string path)
+        {
+            return Process.Start(new ProcessStartInfo
             {
-                while (_playlist.Count > 0)
-                {
-                    _playlistEditSemaphore.WaitOne();
-                    if (_stopPlayback)
-                        break;
-
-                    if (_pausePlayback)
-                    {
-                        while (_pausePlayback)
-                            Thread.Sleep(1000);
-                    }
-                    _playlistEditSemaphore.Release(releaseCount: 1);
-
-                    var currentEntry = _playlist[0];
-
-                    _cancellationTokenSource = new CancellationTokenSource();
-
-                    using (var ffmpeg = CreateStream(currentEntry.Path))
-                    using (var stream = _client.CreatePCMStream(AudioApplication.Music))
-                    {
-                        try 
-                        {
-                            _startedCurrentEntryAt = DateTime.Now;
-                            await ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream, _cancellationTokenSource.Token); 
-                        }
-                        catch (OperationCanceledException e) { }
-                        catch (Exception e) 
-                        {
-                            PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Error, e.Message));
-                        }
-                        finally { await stream.FlushAsync(); }
-                    }
-
-                    _playlistEditSemaphore.WaitOne();
-                    if (!_pausePlayback)
-                        _playlist.RemoveAt(0);
-                    _playlistEditSemaphore.Release(releaseCount: 1);
-                }
-                PlaybackWorker.Events.Enqueue(new StopPlaybackEvent(_guildId));
-                await _client.StopAsync();
-            }
-
-            private Process CreateStream(string path)
-            {
-                return Process.Start(new ProcessStartInfo
-                {
-                    FileName = "ffmpeg",
-                    Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                });
-            }
+                FileName = "ffmpeg",
+                Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+            });
         }
     }
 }
