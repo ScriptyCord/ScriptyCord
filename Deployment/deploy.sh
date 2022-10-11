@@ -52,7 +52,7 @@ fi
 
 # Run tests
 echo "STEP 2: Running tests"
-dotnet ..
+dotnet test ..
 ret=$?
 if [ $ret -ne 0 ]; then
   exit 1
