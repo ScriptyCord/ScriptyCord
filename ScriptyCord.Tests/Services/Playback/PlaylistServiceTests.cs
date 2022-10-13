@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using CSharpFunctionalExtensions;
+using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using ScriptCord.Bot;
@@ -165,6 +166,66 @@ namespace ScriptyCord.Tests.Services.Playback
             // Assert
             result.IsSuccess.Should().Be(false);
             result.Error.Should().BeEquivalentTo("Only a guild administrator can access information about this playlist!");
+        }
+
+        [Fact]
+        [Trait("Services", "PlaylistService")]
+        public async Task PlaylistService_change_default_playlist_on_removal_of_default_playlist()
+        {
+            // Arrange
+            Mock<ILoggerFacade<IPlaylistService>> mockLogger = new Mock<ILoggerFacade<IPlaylistService>>();
+            Mock<IPlaylistRepository> mockPlaylistRepository = new Mock<IPlaylistRepository>();
+            IList<Playlist> playlists = new List<Playlist>
+            {
+                new Playlist
+                {
+                    GuildId = 1,
+                    Name = "playlist",
+                    IsDefault = true,
+                    AdminOnly = false,
+                    PlaylistEntries = new List<PlaylistEntry>()
+                },
+                new Playlist
+                {
+                    GuildId = 1,
+                    Name = "playlist 2",
+                    IsDefault = false,
+                }
+            };
+            mockPlaylistRepository
+                .Setup(x => x.GetSingleAsync(It.IsAny<Expression<Func<Playlist, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(playlists[0]);
+            mockPlaylistRepository
+                .Setup(x => x.GetFirstAsync(It.IsAny<Expression<Func<Playlist, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(playlists[1]);
+            mockPlaylistRepository.Setup(x => x.DeleteAsync(It.IsAny<Playlist>(), It.IsAny<CancellationToken>()))
+                .Callback(() => playlists.RemoveAt(0))
+                .ReturnsAsync(Result.Success());
+            Mock<IPlaylistEntriesRepository> mockPlaylistEntriesRepository = new Mock<IPlaylistEntriesRepository>();
+            mockPlaylistEntriesRepository.Setup(x => x.UpdateAsync(It.IsAny<PlaylistEntry>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Success());
+            mockPlaylistEntriesRepository.Setup(x => x.DeleteManyAsync(It.IsAny<Expression<Func<PlaylistEntry, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Success());
+
+            IConfiguration configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(MockConfiguration.DefaultConfiguration)
+                .Build();
+
+            IPlaylistService service = new PlaylistService(
+                mockLogger.Object,
+                mockPlaylistRepository.Object,
+                mockPlaylistEntriesRepository.Object,
+                configuration,
+                null,
+                null
+            );
+
+            // Act
+            var result = await service.RemovePlaylist(1, "playlist", false);
+
+            // Assert
+            result.IsSuccess.Should().Be(true);
+            playlists[0].IsDefault.Should().Be(true);
         }
     }
 }
