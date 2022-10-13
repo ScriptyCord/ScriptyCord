@@ -111,7 +111,10 @@ namespace ScriptyCord.Bot.Commands
                 );
             }
 
-            await RespondAsync(embeds: embeds.ToArray());
+            if(embeds.Count() > 1)
+                await RespondAsync(embeds: embeds.ToArray());
+            else
+                await RespondAsync(embed: embeds.First());
         }
     }
 }
