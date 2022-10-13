@@ -214,7 +214,7 @@ namespace ScriptCord.Bot.Services.Playback
                     _logger.LogError(otherPlaylistResult);
                     return Result.Failure("Unexpected error occurred while counting playlists in the server.");
                 }
-                else if (otherPlaylistResult.Error != "Sequence contains no elements" && otherPlaylistResult.Value != null)
+                else if (otherPlaylistResult.Value != null)
                 {
                     var otherModel = otherPlaylistResult.Value;
                     otherModel.IsDefault = true;
