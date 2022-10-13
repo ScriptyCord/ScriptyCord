@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace ScriptyCord.Bot.Commands
 {
     [Group("art", "Searches for art on selected websites.")]
-    public class ArtCommandModule : ScriptCordCommandModule
+    public class ArtCommandModule : ScriptyCordCommandModule
     {
         private readonly ILoggerFacade<ArtCommandModule> _logger;
         private readonly IDictionary<Gallery, Func<ABooru>> _boorus;
