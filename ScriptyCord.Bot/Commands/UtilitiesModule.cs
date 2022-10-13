@@ -34,9 +34,19 @@ namespace ScriptyCord.Bot.Commands
                 await RespondAsync(embed: new EmbedBuilder().WithTitle("Invalid dice amount").WithDescription("You need at least one dice to roll!").Build());
                 return;
             }
+            else if (numberOfDice > 100)
+            {
+                await RespondAsync(embed: new EmbedBuilder().WithTitle("Invalid dice amount").WithDescription("You can't throw more than 100 dice!").Build());
+                return;
+            }
             else if (sides < 2)
             {
                 await RespondAsync(embed: new EmbedBuilder().WithTitle("Invalid sides").WithDescription("You need at least two sides on a dice!").Build());
+                return;
+            }
+            else if (sides > 100)
+            {
+                await RespondAsync(embed: new EmbedBuilder().WithTitle("Invalid sides").WithDescription("Maximum side size is 100!").Build());
                 return;
             }
 
