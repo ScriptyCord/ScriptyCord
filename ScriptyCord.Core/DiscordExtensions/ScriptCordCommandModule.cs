@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ScriptCord.Core.DiscordExtensions
 {
-    public abstract class ScriptCordCommandModule : InteractionModuleBase<SocketInteractionContext>
+    public abstract class ScriptyCordCommandModule : InteractionModuleBase<SocketInteractionContext>
     {
         //protected readonly Discord.Color _modulesEmbedColor = Discord.Color.Teal;
         protected readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkGreen;

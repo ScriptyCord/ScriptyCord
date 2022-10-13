@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace ScriptyCord.Bot.Commands.Playback
 {
     [Group("playlist", "Manages and plays audio in voice channels")]
-    public class PlaylistModule : ScriptCordCommandModule
+    public class PlaylistModule : ScriptyCordCommandModule
     {
         private new readonly Discord.Color _modulesEmbedColor = Discord.Color.Teal;
 

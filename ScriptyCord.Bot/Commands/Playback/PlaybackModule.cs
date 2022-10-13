@@ -22,7 +22,7 @@ using YoutubeExplode;
 namespace ScriptCord.Bot.Commands.Playback
 {
     [Group("playback", "Manages and plays audio in voice channels")]
-    public class PlaybackModule : ScriptCordCommandModule
+    public class PlaybackModule : ScriptyCordCommandModule
     {
         private new readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkRed;
         private readonly ILoggerFacade<PlaybackModule> _logger;

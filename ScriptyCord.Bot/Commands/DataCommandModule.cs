@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace ScriptyCord.Bot.Commands
 {
-    public class DataCommandModule : ScriptCordCommandModule
+    public class DataCommandModule : ScriptyCordCommandModule
     {
         private new readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkPurple;
         private readonly ILoggerFacade<DataCommandModule> _logger;

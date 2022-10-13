@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ScriptCord.Bot.Commands
 {
-    public class TestingModule : ScriptCordCommandModule
+    public class TestingModule : ScriptyCordCommandModule
     {
         private ILoggerFacade<TestingModule> _logger;
 

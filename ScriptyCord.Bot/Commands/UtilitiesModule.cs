@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ScriptyCord.Bot.Commands
 {
-    public class UtilitiesModule : ScriptCordCommandModule
+    public class UtilitiesModule : ScriptyCordCommandModule
     {
         private readonly ILoggerFacade<UtilitiesModule> _logger;
 
