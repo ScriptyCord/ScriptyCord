@@ -3,11 +3,6 @@ using Discord;
 using Discord.Interactions;
 using ScriptCord.Bot;
 using ScriptCord.Core.DiscordExtensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ScriptyCord.Bot.Commands
 {
@@ -84,16 +79,31 @@ namespace ScriptyCord.Bot.Commands
             }
 
             ABooru booru = _boorus[gallery]();
-            var result = await booru.GetRandomPostsAsync(count, tagsSeparated);
-            if (result.Count() == 0)
+            BooruSharp.Search.Post.SearchResult[] result = null;
+            try
+            {
+                result = await booru.GetRandomPostsAsync(count, tagsSeparated);
+                if (result.Count() == 0)
+                {
+                    await RespondAsync(
+                        embed: new EmbedBuilder()
+                            .WithColor(Discord.Color.Blue)
+                            .WithTitle($"'{tags.Replace("_", "\\_")}' result from {gallery}")
+                            .WithDescription("No results have been found!")
+                            .Build()
+                    );
+                    return;
+                }
+            }
+            catch(Exception e)
             {
                 await RespondAsync(
-                    embed: new EmbedBuilder()
-                        .WithColor(Discord.Color.Blue)
-                        .WithTitle($"'{tags.Replace("_", "\\_")}' result from {gallery}")
-                        .WithDescription("No results have been found!")
-                        .Build()
-                );
+                        embed: new EmbedBuilder()
+                            .WithColor(Discord.Color.Blue)
+                            .WithTitle($"'{tags.Replace("_", "\\_")}' result from {gallery}")
+                            .WithDescription($"Error: {e.Message}")
+                            .Build()
+                    );
                 return;
             }
 
