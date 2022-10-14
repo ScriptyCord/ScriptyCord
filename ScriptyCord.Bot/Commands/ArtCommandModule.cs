@@ -77,6 +77,16 @@ namespace ScriptyCord.Bot.Commands
                 );
                 return;
             }
+            else if (count > 5)
+            {
+                await RespondAsync(embed: new EmbedBuilder()
+                    .WithTitle("Invalid count")
+                    .WithDescription("You can't look for more than five arts!")
+                    .WithColor(Discord.Color.Red)
+                    .Build()
+                );
+                return;
+            }
 
             ABooru booru = _boorus[gallery]();
             BooruSharp.Search.Post.SearchResult[] result = null;
