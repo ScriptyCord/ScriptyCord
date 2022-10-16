@@ -120,7 +120,7 @@ namespace ScriptyCord.Bot.Commands
             IList<Embed> embeds = new List<Embed>();
             foreach (var art in result)
             {
-                string description = $"**Tags:** {String.Join(" ", art.Tags).Replace("_", "\\_")}\n\n**Source:** {(art.Source != null ? art.Source : "<not provided>")}";
+                string description = $"**Tags:** {String.Join(" ", art.Tags).Replace("_", "\\_")}\n\n**Source:** {(art.Source != null ? art.Source : "<not provided>")}\n**{gallery} Link:** {art.PostUrl}";
                 embeds.Add(
                     new EmbedBuilder()
                         .WithColor(Discord.Color.Blue)
