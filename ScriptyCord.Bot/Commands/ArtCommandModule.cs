@@ -124,8 +124,11 @@ namespace ScriptyCord.Bot.Commands
                 EmbedBuilder eb = new EmbedBuilder()
                         .WithColor(Discord.Color.Blue)
                         .WithTitle($"'{tags.Replace("_", "\\_")}' result from {gallery}")
-                        .WithDescription(description)
-                        .WithImageUrl(art.PreviewUrl.ToString());
+                        .WithDescription(description);
+                if (art.FileUrl.ToString().Contains("mp4") || art.FileUrl.ToString().Contains("mp4"))
+                    eb.WithImageUrl(art.PreviewUrl.ToString());
+                else
+                    eb.WithImageUrl(art.FileUrl.ToString());
 
                 embeds.Add(eb.Build());
             }
