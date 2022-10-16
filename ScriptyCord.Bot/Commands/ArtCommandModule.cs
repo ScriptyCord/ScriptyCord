@@ -121,14 +121,13 @@ namespace ScriptyCord.Bot.Commands
             foreach (var art in result)
             {
                 string description = $"**Tags:** {String.Join(" ", art.Tags).Replace("_", "\\_")}\n\n**Source:** {(art.Source != null ? art.Source : "<not provided>")}\n**{gallery} Link:** {art.PostUrl}";
-                embeds.Add(
-                    new EmbedBuilder()
+                EmbedBuilder eb = new EmbedBuilder()
                         .WithColor(Discord.Color.Blue)
                         .WithTitle($"'{tags.Replace("_", "\\_")}' result from {gallery}")
                         .WithDescription(description)
-                        .WithImageUrl(art.FileUrl.ToString())
-                        .Build()
-                );
+                        .WithImageUrl(art.PreviewUrl.ToString());
+
+                embeds.Add(eb.Build());
             }
 
             if(embeds.Count() > 1)
