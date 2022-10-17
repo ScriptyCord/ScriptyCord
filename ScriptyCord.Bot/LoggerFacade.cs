@@ -29,6 +29,8 @@ namespace ScriptCord.Bot
 
         private Dictionary<LogSeverity, Action<string>> _discordSeverityLogProxy;
 
+        private ulong _supportRoleId = 0;
+
         private SocketTextChannel _textChannel = null;
 
         public LoggerFacade()
@@ -66,6 +68,8 @@ namespace ScriptCord.Bot
                 ulong guildId = configuration.GetSection("discord").GetSection("loggingChannels").GetValue<ulong>("guildId");
                 ulong channelId = configuration.GetSection("discord").GetSection("loggingChannels").GetValue<ulong>($"{targetLoggingChannelType}Id");
                 _textChannel = client.Guilds.First(x => x.Id == guildId).TextChannels.First(x => x.Id == channelId);
+
+                _supportRoleId = configuration.GetSection("discord").GetValue<ulong>("supportRoleId");
             }
         }
 
@@ -110,7 +114,16 @@ namespace ScriptCord.Bot
 
         public void LogFatalException(Exception exception)
         {
-            _textChannel?.SendMessageAsync($"`[{DateTime.UtcNow}][{typeof(T).Name}] {exception.Message}`");
+            if (_textChannel != null)
+            {
+                StringBuilder sb = new StringBuilder($"**`[{DateTime.UtcNow}][{typeof(T).Name}] {exception.Message}`**");
+                if (_supportRoleId != 0)
+                    sb.Append($"\n*cc: <@&{_supportRoleId}>*");
+
+                var task = _textChannel.SendMessageAsync(sb.ToString());
+                task.Wait();
+            }
+
             _logger.Log(NLog.LogLevel.Fatal, exception);
         }
 

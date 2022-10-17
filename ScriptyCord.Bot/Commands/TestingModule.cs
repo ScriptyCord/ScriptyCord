@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace ScriptCord.Bot.Commands
 {
+#if DEBUG
     public class TestingModule : ScriptyCordCommandModule
     {
         private ILoggerFacade<TestingModule> _logger;
@@ -26,5 +27,13 @@ namespace ScriptCord.Bot.Commands
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Echoing a user message");
             await RespondAsync(echo + (mention ? Context.User.Mention : string.Empty));
         }
+
+        [SlashCommand("foo-bar", "Dummy command to execute any code the developer puts below")]
+        public async Task FooBar()
+        {
+            _logger.LogFatalException(new Exception("Test an exception"));
+            await RespondAsync("Foo and bar");
+        }
     }
+#endif
 }
