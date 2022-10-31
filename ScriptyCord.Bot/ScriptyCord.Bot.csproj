@@ -47,8 +47,8 @@
     <PackageReference Include="NHibernate" Version="5.3.13" />
     <PackageReference Include="NLog" Version="5.0.4" />
     <PackageReference Include="Npgsql" Version="6.0.6" />
-    <PackageReference Include="YoutubeExplode" Version="6.2.1" />
-    <PackageReference Include="YoutubeExplode.Converter" Version="6.2.1" />
+    <PackageReference Include="YoutubeExplode" Version="6.2.2" />
+    <PackageReference Include="YoutubeExplode.Converter" Version="6.2.2" />
   </ItemGroup>
 
   <ItemGroup>
