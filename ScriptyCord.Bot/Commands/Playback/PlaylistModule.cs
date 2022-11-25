@@ -254,7 +254,7 @@ namespace ScriptyCord.Bot.Commands.Playback
 
             await RespondAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Adding entries from internet playlist: {url}").Build());
             var message = await ReplyAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Download progress: (loading playlist data)").Build());
-            var result = await _playlistEntriesService.AddEntriesFromPlaylistUrl(Context.Guild.Id, playlistName, url, async (downloadedCount, totalCount, currentMetadata) =>
+            var result = await _playlistEntriesService.AddEntriesFromPlaylistUrl(Context.Guild.Id, playlistName, url, (downloadedCount, totalCount, currentMetadata) =>
             {
                 if (downloadedCount == totalCount)
                     return;
@@ -262,7 +262,7 @@ namespace ScriptyCord.Bot.Commands.Playback
                 string transformedTitle = currentMetadata.Title.Replace("*", "\\*").Replace("|", "\\|").Replace("_", "\\_");
                 string description = $"Downloaded: '**{transformedTitle}**'";
 
-                await message.ModifyAsync((x) =>
+                message.ModifyAsync((x) =>
                 {
                     x.Embed = new EmbedBuilder()
                     .WithColor(_modulesEmbedColor)
@@ -271,13 +271,13 @@ namespace ScriptyCord.Bot.Commands.Playback
                     .WithCurrentTimestamp()
                     .WithImageUrl(currentMetadata.Thumbnail)
                     .Build();
-                });
+                }).Wait();
             },
-            async (finalDownloadedCount, remotePlaylistTotalCount, lastMetadata) =>
+            (finalDownloadedCount, remotePlaylistTotalCount, lastMetadata) =>
             {
                 string description = $"All entries from the remote playlist have been successfully added. Added {finalDownloadedCount} out of {remotePlaylistTotalCount} entries (skipped {remotePlaylistTotalCount - finalDownloadedCount} duplicates).\r\n*{url}*";
 
-                await message.ModifyAsync((x) =>
+                message.ModifyAsync((x) =>
                 {
                     x.Embed = new EmbedBuilder()
                     .WithColor(Discord.Color.Green)
@@ -286,7 +286,7 @@ namespace ScriptyCord.Bot.Commands.Playback
                     .WithCurrentTimestamp()
                     .WithImageUrl(lastMetadata.Thumbnail)
                     .Build();
-                });
+                }).Wait();
             },
             IsUserGuildAdministrator());
             if (result.IsFailure)
