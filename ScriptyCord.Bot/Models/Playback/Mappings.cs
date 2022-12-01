@@ -21,7 +21,6 @@ namespace ScriptCord.Bot.Models.Playback
             Map(x => x.AdminOnly).Column("admin_only");
             HasMany(x => x.PlaylistEntries)
                 .Not.LazyLoad()
-                //.Not.ExtraLazyLoad()
                 .Cascade.Delete().Inverse();
         }
     }
@@ -40,10 +39,6 @@ namespace ScriptCord.Bot.Models.Playback
             Map(x => x.UploadTimestamp).Column("upload_timestamp");
             References(x => x.Playlist).ForeignKey("fk_playlist")
                 .Not.Nullable();
-                //.Not.Cascade.All();
-            //.Cascade.All()
-            //.Not.Cascade.All()
-            //HasOne<Playlist>(x => x.Playlist.Id)
         }
     }
 }

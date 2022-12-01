@@ -14,6 +14,6 @@ namespace ScriptCord.Bot.Repositories.Playback
 
     public class PlaylistEntriesRepository : PostgreBaseRepository<PlaylistEntry>, IPlaylistEntriesRepository
     {
-        public PlaylistEntriesRepository(ISession session) : base(session) {}
+        public PlaylistEntriesRepository(ISessionFactory sessionFactory) : base(sessionFactory) {}
     }
 }

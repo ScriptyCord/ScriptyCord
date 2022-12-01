@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace ScriptCord.Core.Persistency
 {
@@ -14,8 +15,10 @@ namespace ScriptCord.Core.Persistency
     {
         protected readonly ISession _session;
 
-        public PostgreBaseRepository(ISession session)
-            => _session = session;
+        public PostgreBaseRepository(ISessionFactory sessionFactory)
+        {
+            _session = sessionFactory.OpenSession();
+        }
 
         public async Task<Result> SaveAsync(TEntity entity, CancellationToken cancellationToken = default)
         {

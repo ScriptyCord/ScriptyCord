@@ -68,8 +68,9 @@ namespace ScriptCord.Bot
 
         public void SetupRepositories(IConfiguration config)
         {
-            var sessionFactory = NHibernateSessionFactory;
-            _services.AddSingleton(sessionFactory.OpenSession());
+            ISessionFactory sessionFactory = NHibernateSessionFactory;
+            _services.AddSingleton(sessionFactory);
+            //_services.AddSingleton(sessionFactory.OpenSession());
 
             _services.AddScoped<IPlaylistRepository, PlaylistRepository>();
             _services.AddScoped<IPlaylistEntriesRepository, PlaylistEntriesRepository>();
