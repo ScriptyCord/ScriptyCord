@@ -22,12 +22,14 @@ namespace ScriptCord.Bot
         private readonly CommandService _commands;
         private readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILoggerFacade<ICommandHandlingService> _logger;
 
-        public CommandHandlingService(CommandService commands, DiscordSocketClient discord, IServiceProvider serviceProvider)
+        public CommandHandlingService(CommandService commands, DiscordSocketClient discord, IServiceProvider serviceProvider, ILoggerFacade<ICommandHandlingService> logger)
         {
             _commands = commands;
             _discord = discord;
             _serviceProvider = serviceProvider;
+            _logger = logger;
 
             _commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;

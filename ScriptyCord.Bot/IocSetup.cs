@@ -71,8 +71,8 @@ namespace ScriptCord.Bot
             var sessionFactory = NHibernateSessionFactory;
             _services.AddSingleton(sessionFactory.OpenSession());
 
-            _services.AddSingleton<IPlaylistRepository, PlaylistRepository>();
-            _services.AddSingleton<IPlaylistEntriesRepository, PlaylistEntriesRepository>();
+            _services.AddScoped<IPlaylistRepository, PlaylistRepository>();
+            _services.AddScoped<IPlaylistEntriesRepository, PlaylistEntriesRepository>();
 
             //_services.AddScoped(typeof(PostgreBaseRepository<>));
             //MicroOrmConfig.SqlProvider = MicroOrm.Dapper.Repositories.SqlGenerator.SqlProvider.PostgreSQL;

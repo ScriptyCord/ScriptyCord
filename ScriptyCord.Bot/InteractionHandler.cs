@@ -46,6 +46,7 @@ namespace ScriptCord.Bot
                 await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
                 await _interactionService.RegisterCommandsGloballyAsync(true);
                 await _services.GetRequiredService<IPlaybackWorker>().Run();
+                _logger.SetupDiscordLogging(_configuration, _client, "general");
             }
             catch (Exception e) 
             {
@@ -59,31 +60,34 @@ namespace ScriptCord.Bot
 
         private async Task HandleInteraction(SocketInteraction interaction)
         {
-            try
+            using (var scope = _services.CreateScope())
             {
-                var context = new SocketInteractionContext(_client, interaction);
-                var result = await _interactionService.ExecuteCommandAsync(context, _services);
-
-                if (!result.IsSuccess)
+                try
                 {
-                    _logger.Log(NLog.LogLevel.Error, $"[GuildId({context.Guild.Id}),ChannelId({context.Channel.Id})] error while executing command: {result.ErrorReason}");
-                    switch (result.Error)
+                    var context = new SocketInteractionContext(_client, interaction);
+                    var result = await _interactionService.ExecuteCommandAsync(context, _services);
+
+                    if (!result.IsSuccess)
                     {
-                        case InteractionCommandError.UnmetPrecondition:
-                            // TODO
-                            break;
-                        default:
-                            break;
+                        _logger.Log(NLog.LogLevel.Error, $"[GuildId({context.Guild.Id}),ChannelId({context.Channel.Id})] error while executing command: {result.ErrorReason}");
+                        switch (result.Error)
+                        {
+                            case InteractionCommandError.UnmetPrecondition:
+                                // TODO
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                // If Slash Command execution fails it is most likely that the original interaction acknowledgement will persist. It is a good idea to delete the original
-                // response, or at least let the user know that something went wrong during the command execution.
-                _logger.LogException(e);
-                if (interaction.Type is InteractionType.ApplicationCommand)
-                    await interaction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
+                catch (Exception e)
+                {
+                    // If Slash Command execution fails it is most likely that the original interaction acknowledgement will persist. It is a good idea to delete the original
+                    // response, or at least let the user know that something went wrong during the command execution.
+                    _logger.LogException(e);
+                    if (interaction.Type is InteractionType.ApplicationCommand)
+                        await interaction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
+                }
             }
         }
     }
