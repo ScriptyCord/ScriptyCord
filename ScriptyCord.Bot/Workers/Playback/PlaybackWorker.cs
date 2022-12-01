@@ -227,7 +227,10 @@ namespace ScriptCord.Bot.Workers.Playback
                         _startedCurrentEntryAt = DateTime.Now;
                         await ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream, _cancellationTokenSource.Token);
                     }
-                    catch (OperationCanceledException e) { }
+                    catch (OperationCanceledException e) 
+                    {
+                        PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, e.Message));
+                    }
                     catch (Exception e)
                     {
                         PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Error, e.Message));
