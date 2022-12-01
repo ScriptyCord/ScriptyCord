@@ -75,7 +75,7 @@ namespace ScriptCord.Bot.Services.Playback
             try
             {
                 count = playlist.PlaylistEntries.Count();
-                lastFifteenClips = playlist.PlaylistEntries.OrderBy(x => x.UploadTimestamp)
+                lastFifteenClips = playlist.PlaylistEntries.OrderByDescending(x => x.UploadTimestamp)
                     .Take(15)
                     .Select(x => new LightPlaylistEntryDto { AudioLength = x.AudioLengthFormatted(), Source = x.Source, Id = x.Id.ToString(), SourceId = x.SourceIdentifier, Title = x.Title, UploadedAt = x.UploadTimestamp.ToString("MM/dd/yyyy HH:mm:ss") })
                     .ToList();

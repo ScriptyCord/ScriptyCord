@@ -37,7 +37,7 @@ namespace ScriptyCord.Bot.Commands.Playback
 
         #region playlistManagement
 
-        [SlashCommand("list-entries", "Lists entries of a given playlist")]
+        [SlashCommand("list-entries", "List the newest entries of a given playlist")]
         public async Task ListEntries([Summary(description: "Name of the playlist")] string playlistName)
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Listing entries in {playlistName} playlist");
@@ -70,12 +70,12 @@ namespace ScriptyCord.Bot.Commands.Playback
                 int index = 1;
                 foreach (var pair in playlistResult.Value.NewestFifteenAudioClips.Select(x => new { Index = index, Entry = x }))
                 {
-                    sb.AppendLine($"**{pair.Index}**. '{pair.Entry.Title}' (ID: {pair.Entry.Id}, {pair.Entry.Source} ID: {pair.Entry.SourceId}, Length: {pair.Entry.AudioLength})");
+                    sb.AppendLine($"**{pair.Index}. *{pair.Entry.Title}*** \n*{pair.Entry.Source} ID: {pair.Entry.SourceId}, Length: {pair.Entry.AudioLength}*");
                     index++;
                 }
 
                 if (playlistResult.Value.SongCount >= 15)
-                    sb.AppendLine("...");
+                    sb.AppendLine($"\n*and {playlistResult.Value.SongCount-15} more. Use `/playlist export-playlist` to get all entries.*");
 
                 await RespondAsync(
                     embed: new EmbedBuilder()
