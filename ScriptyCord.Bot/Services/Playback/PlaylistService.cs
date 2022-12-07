@@ -214,9 +214,9 @@ namespace ScriptCord.Bot.Services.Playback
                     _logger.LogError(otherPlaylistResult);
                     return Result.Failure("Unexpected error occurred while counting playlists in the server.");
                 }
-                else if (otherPlaylistResult.Value != null)
+                else if (otherPlaylistResult.TryGetValue(out Playlist otherModel))
                 {
-                    var otherModel = otherPlaylistResult.Value;
+                    //var otherModel = otherPlaylistResult.Value;
                     otherModel.IsDefault = true;
                     await _playlistRepository.UpdateAsync(otherModel);
                 }
