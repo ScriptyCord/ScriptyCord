@@ -253,8 +253,9 @@ namespace ScriptyCord.Bot.Commands.Playback
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Adding entries to a playlist from a specified playlist url ({url})");
 
             await RespondAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Adding entries from internet playlist: {url}").Build());
-            var message = await ReplyAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Download progress: (loading playlist data)").Build());
-            var result = await _playlistEntriesService.AddEntriesFromPlaylistUrl(Context.Guild.Id, playlistName, url, (downloadedCount, totalCount, currentMetadata) =>
+            
+            var message = await FollowupAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Download progress: (loading playlist data)").Build());
+            Action<int, int, AudioMetadataDto> progressUpdate = (downloadedCount, totalCount, currentMetadata) =>
             {
                 if (downloadedCount == totalCount)
                     return;
@@ -272,8 +273,8 @@ namespace ScriptyCord.Bot.Commands.Playback
                     .WithImageUrl(currentMetadata.Thumbnail)
                     .Build();
                 }).Wait();
-            },
-            (finalDownloadedCount, remotePlaylistTotalCount, lastMetadata) =>
+            };
+            Action<int, int, AudioMetadataDto> finalAction = (finalDownloadedCount, remotePlaylistTotalCount, lastMetadata) =>
             {
                 string description = $"All entries from the remote playlist have been successfully added. Added {finalDownloadedCount} out of {remotePlaylistTotalCount} entries (skipped {remotePlaylistTotalCount - finalDownloadedCount} duplicates).\r\n*{url}*";
 
@@ -287,11 +288,19 @@ namespace ScriptyCord.Bot.Commands.Playback
                     .WithImageUrl(lastMetadata.Thumbnail)
                     .Build();
                 }).Wait();
-            },
-            IsUserGuildAdministrator());
+            };
+
+            var result = await _playlistEntriesService.AddEntriesFromPlaylistUrl(Context.Guild.Id, playlistName, url, progressUpdate, finalAction, IsUserGuildAdministrator());
             if (result.IsFailure)
             {
-                await FollowupAsync(embed: new EmbedBuilder().WithTitle("Failure").WithDescription($"Failed to add entries from {url}").Build());
+                await message.ModifyAsync((x) =>
+                {
+                    x.Embed = new EmbedBuilder()
+                        .WithColor(Discord.Color.Red)
+                        .WithTitle("An error occurred")
+                        .WithDescription(result.Error)
+                        .Build();
+                });
             }
         }
 

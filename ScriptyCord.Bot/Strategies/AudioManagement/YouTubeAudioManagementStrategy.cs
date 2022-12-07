@@ -58,21 +58,27 @@ namespace ScriptCord.Bot.Strategies.AudioManagement
             };
         }
 
-        public async Task<InternetPlaylistMetadataDto> ExtractPlaylistMetadata(string playlistUrl)
+        public async Task<Result<InternetPlaylistMetadataDto>> ExtractPlaylistMetadata(string playlistUrl)
         {
-            var playlist = await _client.Playlists.GetAsync(playlistUrl);
-
-            InternetPlaylistMetadataDto dto = new InternetPlaylistMetadataDto();
-            dto.Title = playlist.Title;
             IList<AudioMetadataDto> entries = new List<AudioMetadataDto>();
-
-            var videos = await _client.Playlists.GetVideosAsync(playlistUrl);
-            foreach (var entry in videos)
+            InternetPlaylistMetadataDto dto = new InternetPlaylistMetadataDto();
+            try
             {
-                entries.Add(await ExtractMetadataFromUrl(entry.Url));
+                var playlist = await _client.Playlists.GetAsync(playlistUrl);
+                dto.Title = playlist.Title;
+                var videos = await _client.Playlists.GetVideosAsync(playlistUrl);
+                foreach (var entry in videos)
+                {
+                    entries.Add(await ExtractMetadataFromUrl(entry.Url));
+                }
+
+                dto.Entries = entries;
+            }
+            catch (Exception e)
+            {
+                return Result.Failure<InternetPlaylistMetadataDto>(e.Message);
             }
 
-            dto.Entries = entries;
             return dto;
         }
 

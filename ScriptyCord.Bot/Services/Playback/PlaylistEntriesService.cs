@@ -21,7 +21,7 @@ namespace ScriptCord.Bot.Services.Playback
     public interface IPlaylistEntriesService
     {
         Task<Result<AudioMetadataDto>> AddEntryFromUrlToPlaylistByName(ulong guildId, string playlistName, string url, bool isAdmin = false);
-        Task<Result> AddEntriesFromPlaylistUrl(ulong guildId, string playlistName, string url, Action<int, int, AudioMetadataDto> progressUpdate, Action<int, int, AudioMetadataDto> finalAction, bool isAdmin = false);
+        Task<Result> AddEntriesFromPlaylistUrl(ulong guildId, string playlistName, string url, Action<int, int, AudioMetadataDto> onProgressUpdate, Action<int, int, AudioMetadataDto> onFinalAction, bool isAdmin = false);
         Task<Result<AudioMetadataDto>> RemoveEntryFromPlaylistByName(ulong guildId, string playlistName, string entryName, bool isAdmin = false);
     }
 
@@ -120,7 +120,7 @@ namespace ScriptCord.Bot.Services.Playback
             return Result.Success(metadata);
         }
 
-        public async Task<Result> AddEntriesFromPlaylistUrl(ulong guildId, string playlistName, string url, Action<int, int, AudioMetadataDto> progressUpdate, Action<int, int, AudioMetadataDto> finalAction, bool isAdmin = false)
+        public async Task<Result> AddEntriesFromPlaylistUrl(ulong guildId, string playlistName, string url, Action<int, int, AudioMetadataDto> onProgressUpdate, Action<int, int, AudioMetadataDto> onFinalAction, bool isAdmin = false)
         {
             var playlistResult = await _playlistRepository.GetSingleAsync(x => x.GuildId == guildId && x.Name == playlistName);
             if (playlistResult.IsFailure)
@@ -136,7 +136,13 @@ namespace ScriptCord.Bot.Services.Playback
             if (strategyResult.IsFailure)
                 return Result.Failure(strategyResult.Error);
             IAudioManagementStrategy strategy = strategyResult.Value;
-            InternetPlaylistMetadataDto playlistMetadata = await strategy.ExtractPlaylistMetadata(url);
+            Result<InternetPlaylistMetadataDto> playlistMetadataResult = await strategy.ExtractPlaylistMetadata(url);
+            if (playlistMetadataResult.IsFailure)
+            {
+                _logger.LogError(playlistMetadataResult);
+                return Result.Failure(playlistMetadataResult.Error);
+            }
+            InternetPlaylistMetadataDto playlistMetadata = playlistMetadataResult.Value;
 
             _createRemoveSemaphore.WaitOne();
 
@@ -183,13 +189,13 @@ namespace ScriptCord.Bot.Services.Playback
                     playlistEntries.Add(playlistEntry);
 
                     downloaded++;
-                    progressUpdate(i, playlistMetadata.Entries.Count(), metadata);
+                    onProgressUpdate(i, playlistMetadata.Entries.Count(), metadata);
                 }
             }
 
             _createRemoveSemaphore.Release(releaseCount: 1);
 
-            finalAction(downloaded, playlistMetadata.Entries.Count(), playlistMetadata.Entries.Last());
+            onFinalAction(downloaded, playlistMetadata.Entries.Count(), playlistMetadata.Entries.Last());
 
             PlaybackWorker.Events.Enqueue(new AppendSongsEvent(playlistEntries, guildId));
 
