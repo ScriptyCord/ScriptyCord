@@ -13,7 +13,7 @@ namespace ScriptCord.Bot.Strategies.AudioManagement
     {
         string GenerateFileNameFromMetadata(AudioMetadataDto metadata);
         Task<Result> DownloadAudio(AudioMetadataDto metadata);
-        Task<AudioMetadataDto> ExtractMetadataFromUrl(string url);
+        Task<Result<AudioMetadataDto>> ExtractMetadataFromUrl(string url);
         Task<Result<InternetPlaylistMetadataDto>> ExtractPlaylistMetadata(string playlistUrl);
         Task<AudioMetadataDto> GetMetadataBySourceId(string sourceId);
     }

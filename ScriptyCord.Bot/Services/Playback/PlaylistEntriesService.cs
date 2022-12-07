@@ -67,7 +67,15 @@ namespace ScriptCord.Bot.Services.Playback
             if (strategyResult.IsFailure)
                 return Result.Failure<AudioMetadataDto>(strategyResult.Error);
             IAudioManagementStrategy strategy = strategyResult.Value;
-            AudioMetadataDto metadata = await strategy.ExtractMetadataFromUrl(url);
+
+            Result<AudioMetadataDto> metadataResult = await strategy.ExtractMetadataFromUrl(url);
+            if (metadataResult.IsFailure)
+            {
+                _logger.LogError(metadataResult);
+                return Result.Failure<AudioMetadataDto>(metadataResult.Error);
+            }
+            AudioMetadataDto metadata = metadataResult.Value;
+            
             if (metadata.AudioLength > TimeSpan.FromMinutes(35).TotalMilliseconds)
                 return Result.Failure<AudioMetadataDto>($"Audio can't be longer than 35 minutes");
 

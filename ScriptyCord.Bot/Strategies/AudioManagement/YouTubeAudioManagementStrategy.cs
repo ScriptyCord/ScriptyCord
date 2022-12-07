@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using YoutubeExplode;
 using YoutubeExplode.Common;
 using YoutubeExplode.Converter;
+using YoutubeExplode.Videos;
 
 namespace ScriptCord.Bot.Strategies.AudioManagement
 {
@@ -44,9 +45,17 @@ namespace ScriptCord.Bot.Strategies.AudioManagement
             return Result.Success();
         }
 
-        public async Task<AudioMetadataDto> ExtractMetadataFromUrl(string url)
+        public async Task<Result<AudioMetadataDto>> ExtractMetadataFromUrl(string url)
         {
-            var video = await _client.Videos.GetAsync(url);
+            Video video;
+            try
+            {
+                video = await _client.Videos.GetAsync(url);
+            }
+            catch (Exception e)
+            {
+                return Result.Failure<AudioMetadataDto>(e.Message);
+            }
             return new AudioMetadataDto
             {
                 Title = video.Title,
@@ -69,7 +78,11 @@ namespace ScriptCord.Bot.Strategies.AudioManagement
                 var videos = await _client.Playlists.GetVideosAsync(playlistUrl);
                 foreach (var entry in videos)
                 {
-                    entries.Add(await ExtractMetadataFromUrl(entry.Url));
+                    Result<AudioMetadataDto> result = await ExtractMetadataFromUrl(entry.Url);
+                    if (result.IsFailure)
+                        return Result.Failure<InternetPlaylistMetadataDto>(result.Error);
+
+                    entries.Add(result.Value);
                 }
 
                 dto.Entries = entries;

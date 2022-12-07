@@ -228,10 +228,11 @@ namespace ScriptyCord.Bot.Commands.Playback
             await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "add-entry", "Adding entry. This may take a while depending on user traffic and audio length. Please wait..."));
 
             var result = await _playlistEntriesService.AddEntryFromUrlToPlaylistByName(Context.Guild.Id, playlistName, url);
-            EmbedBuilder builder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+            EmbedBuilder builder = new EmbedBuilder();
 
             if (result.IsSuccess)
             {
+                builder.WithColor(Discord.Color.Green);
                 var metadata = result.Value;
                 string transformedTitle = metadata.Title.Replace("*", "\\*").Replace("|", "\\|").Replace("_", "\\_");
                 builder.WithTitle("Success")
@@ -240,6 +241,7 @@ namespace ScriptyCord.Bot.Commands.Playback
             }
             else
             {
+                builder.WithColor(Discord.Color.Red);
                 builder.WithTitle("Failure")
                     .WithDescription($"Failed to add a new entry to the playlist: {result.Error}!");
             }
