@@ -10,11 +10,8 @@ namespace ScriptCord.Core.DiscordExtensions
 {
     public abstract class ScriptyCordCommandModule : InteractionModuleBase<SocketInteractionContext>
     {
-        //protected readonly Discord.Color _modulesEmbedColor = Discord.Color.Teal;
-        protected readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkGreen;
-
         protected Embed CommandIsBeingProcessedEmbed(string groupName, string commandName, string processingMessage = "Command is being processed. Please wait...")
-            => new EmbedBuilder().WithColor(_modulesEmbedColor).WithTitle($"{groupName} {commandName}").WithDescription(processingMessage).Build();
+            => new EmbedBuilder().WithColor(Discord.Color.Blue).WithTitle($"{groupName} {commandName}").WithDescription(processingMessage).Build();
 
         protected bool IsUserGuildAdministrator()
         {

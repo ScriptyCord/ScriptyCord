@@ -18,8 +18,6 @@ namespace ScriptyCord.Bot.Commands.Playback
     [Group("playlist", "Manages and plays audio in voice channels")]
     public class PlaylistModule : ScriptyCordCommandModule
     {
-        private new readonly Discord.Color _modulesEmbedColor = Discord.Color.Teal;
-
         private readonly ILoggerFacade<PlaylistModule> _logger;
         private readonly IPlaylistEntriesService _playlistEntriesService;
         private readonly IPlaylistService _playlistService;
@@ -47,7 +45,7 @@ namespace ScriptyCord.Bot.Commands.Playback
             {
                 await RespondAsync(
                     embed: new EmbedBuilder()
-                        .WithColor(_modulesEmbedColor)
+                        .WithColor(Discord.Color.Red)
                         .WithTitle("Failure")
                         .WithDescription($"Failed to read playlist's data: {playlistResult.Error}")
                         .Build()
@@ -58,7 +56,7 @@ namespace ScriptyCord.Bot.Commands.Playback
             {
                 await RespondAsync(
                     embed: new EmbedBuilder()
-                        .WithColor(_modulesEmbedColor)
+                        .WithColor(Discord.Color.Blue)
                         .WithTitle($"{playlistName} entries")
                         .WithDescription($"No entries in this playlist")
                         .Build()
@@ -79,7 +77,7 @@ namespace ScriptyCord.Bot.Commands.Playback
 
                 await RespondAsync(
                     embed: new EmbedBuilder()
-                        .WithColor(_modulesEmbedColor)
+                        .WithColor(Discord.Color.Blue)
                         .WithTitle($"{playlistName} entries")
                         .WithDescription(sb.ToString())
                         .Build()
@@ -96,7 +94,7 @@ namespace ScriptyCord.Bot.Commands.Playback
             {
                 await RespondAsync(embed: new EmbedBuilder()
                      .WithTitle($"{Context.Guild.Name}'s Playlists")
-                     .WithColor(_modulesEmbedColor)
+                     .WithColor(Discord.Color.Red)
                      .WithDescription(playlistsResult.Error)
                      .WithCurrentTimestamp().Build()
                  );
@@ -114,7 +112,7 @@ namespace ScriptyCord.Bot.Commands.Playback
 
             EmbedBuilder builder = new EmbedBuilder()
                     .WithTitle($"{Context.Guild.Name}'s Playlists")
-                    .WithColor(_modulesEmbedColor)
+                    .WithColor(Discord.Color.Blue)
                     .WithCurrentTimestamp();
             if (playlists.Count() > 0)
                 builder.WithDescription(sb.ToString());
@@ -136,7 +134,7 @@ namespace ScriptyCord.Bot.Commands.Playback
             {
                 await RespondAsync(
                     embed: new EmbedBuilder()
-                        .WithColor(_modulesEmbedColor)
+                        .WithColor(Discord.Color.Green)
                         .WithTitle("Success")
                         .WithDescription($"Created a new playlist called {name}.")
                         .Build()
@@ -146,7 +144,7 @@ namespace ScriptyCord.Bot.Commands.Playback
             {
                 await RespondAsync(
                     embed: new EmbedBuilder()
-                        .WithColor(_modulesEmbedColor)
+                        .WithColor(Discord.Color.Red)
                         .WithTitle("Failure")
                         .WithDescription($"Failed to create a playlist: {result.Error}")
                         .Build()
@@ -163,7 +161,7 @@ namespace ScriptyCord.Bot.Commands.Playback
             {
                 await RespondAsync(
                     embed: new EmbedBuilder()
-                        .WithColor(_modulesEmbedColor)
+                        .WithColor(Discord.Color.Green)
                         .WithTitle("Success")
                         .WithDescription($"Renamed the specified playlist.")
                         .Build()
@@ -173,7 +171,7 @@ namespace ScriptyCord.Bot.Commands.Playback
             {
                 await RespondAsync(
                     embed: new EmbedBuilder()
-                        .WithColor(_modulesEmbedColor)
+                        .WithColor(Discord.Color.Red)
                         .WithTitle("Failure")
                         .WithDescription($"Failed to rename the specified playlist: {result.Error}")
                         .Build()
@@ -188,11 +186,11 @@ namespace ScriptyCord.Bot.Commands.Playback
             await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "remove-playlist", "Removing a playlist and its entries. This may take a while depending on user traffic and amount of entries. Please wait..."));
 
             var result = await _playlistService.RemovePlaylist(Context.Guild.Id, name, IsUserGuildAdministrator());
-            EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+            EmbedBuilder embedBuilder = new EmbedBuilder();
             if (result.IsSuccess)
-                embedBuilder.WithTitle("Success").WithDescription($"Successfully deleted playlist '{name}'.");
+                embedBuilder.WithColor(Discord.Color.Green).WithTitle("Success").WithDescription($"Successfully deleted playlist '{name}'.");
             else
-                embedBuilder.WithTitle("Failure").WithDescription($"Failed to remove the specified playlist: {result.Error}");
+                embedBuilder.WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription($"Failed to remove the specified playlist: {result.Error}");
 
             await FollowupAsync(embed: embedBuilder.Build());
         }
@@ -205,7 +203,7 @@ namespace ScriptyCord.Bot.Commands.Playback
 
             if (result.IsFailure)
             {
-                EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+                EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(Discord.Color.Red);
                 embedBuilder.WithTitle("Failure").WithDescription($"Failed to export the specified playlist: {result.Error}");
                 await ReplyAsync(embed: embedBuilder.Build());
             }
@@ -232,17 +230,17 @@ namespace ScriptyCord.Bot.Commands.Playback
 
             if (result.IsSuccess)
             {
-                builder.WithColor(Discord.Color.Green);
                 var metadata = result.Value;
                 string transformedTitle = metadata.Title.Replace("*", "\\*").Replace("|", "\\|").Replace("_", "\\_");
                 builder.WithTitle("Success")
+                    .WithColor(Discord.Color.Green)
                     .WithDescription($"Successfully added **'{transformedTitle}'** from {metadata.SourceType} to **'{playlistName}'**.\r\n*{url}*")
                     .WithImageUrl(metadata.Thumbnail);
             }
             else
             {
-                builder.WithColor(Discord.Color.Red);
                 builder.WithTitle("Failure")
+                    .WithColor(Discord.Color.Red)
                     .WithDescription($"Failed to add a new entry to the playlist: {result.Error}!");
             }
 
@@ -254,9 +252,9 @@ namespace ScriptyCord.Bot.Commands.Playback
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Adding entries to a playlist from a specified playlist url ({url})");
 
-            await RespondAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Adding entries from internet playlist: {url}").Build());
+            await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "add-entries-from-playlist", "Adding entries from playlist. This may take a while depending on user traffic and amount of videos. Please wait..."));
             
-            var message = await FollowupAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithDescription($"Download progress: (loading playlist data)").Build());
+            var message = await FollowupAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Blue).WithDescription($"Download progress: (loading playlist data)").Build());
             Action<int, int, AudioMetadataDto> progressUpdate = (downloadedCount, totalCount, currentMetadata) =>
             {
                 if (downloadedCount == totalCount)
@@ -268,7 +266,7 @@ namespace ScriptyCord.Bot.Commands.Playback
                 message.ModifyAsync((x) =>
                 {
                     x.Embed = new EmbedBuilder()
-                    .WithColor(_modulesEmbedColor)
+                    .WithColor(Discord.Color.Blue)
                     .WithTitle($"Download progress: {downloadedCount}/{totalCount}")
                     .WithDescription(description)
                     .WithCurrentTimestamp()
@@ -313,18 +311,20 @@ namespace ScriptyCord.Bot.Commands.Playback
             await RespondAsync(embed: CommandIsBeingProcessedEmbed("playback", "remove-entry", "Removing the entry. This may take a while depending on user traffic. Please wait..."));
 
             var result = await _playlistEntriesService.RemoveEntryFromPlaylistByName(Context.Guild.Id, playlistName, entryName);
-            EmbedBuilder builder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+            EmbedBuilder builder = new EmbedBuilder();
 
             if (result.IsSuccess)
             {
                 var metadata = result.Value;
                 builder.WithTitle("Success")
+                    .WithColor(Discord.Color.Green)
                     .WithThumbnailUrl(metadata.Thumbnail)
                     .WithDescription($"Successfully removed '{metadata.Title}' from '{playlistName}'.");
             }
             else
             {
                 builder.WithTitle("Failure")
+                    .WithColor(Discord.Color.Red)
                     .WithDescription($"Failed to remove an entry from the playlist: {result.Error}!");
             }
 
