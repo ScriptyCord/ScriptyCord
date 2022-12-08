@@ -141,6 +141,8 @@ namespace ScriptCord.Bot.Workers.Playback
 
         private bool _pausePlayback = false;
 
+        private int? _pausedAfterSeconds;
+
         private ulong _guildId;
 
         private DateTime _startedCurrentEntryAt;
@@ -219,18 +221,27 @@ namespace ScriptCord.Bot.Workers.Playback
 
                 _cancellationTokenSource = new CancellationTokenSource();
 
-                using (var ffmpeg = CreateStream(currentEntry.Path))
+                PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, $"PausedAfterSeconds: {_pausedAfterSeconds}"));
+                using (var ffmpeg = CreateStream(currentEntry.Path, _pausedAfterSeconds))
                 using (var stream = _client.CreatePCMStream(AudioApplication.Music))
                 {
                     try
                     {
-                        _startedCurrentEntryAt = DateTime.Now;
+                        _pausedAfterSeconds = null;
+                        _startedCurrentEntryAt = DateTime.Now;//.AddSeconds(1); Some kind of offset might be necessary as it goes a bit to the back when unpausing
                         await ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream, _cancellationTokenSource.Token);
                     }
                     catch (OperationCanceledException e) 
                     {
+                        TimeSpan foo = GetTimeSinceEntryStart();
+                        _pausedAfterSeconds = foo.Seconds; 
                         if (e.Message == "A task was canceled.")
-                            PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, $"Possibly web socket is reconnecting. {e.Data}"));
+                        {
+
+                            PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, $"Possibly web socket is reconnecting. Played current song for {foo.Seconds}. Attempting to restart stream"));
+                            _pausePlayback = true;
+                            PlaybackWorker.Events.Enqueue(new UnpauseSongEvent(_guildId));
+                        }
                         PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, e.Message));
                     }
                     catch (Exception e)
@@ -249,12 +260,19 @@ namespace ScriptCord.Bot.Workers.Playback
             await _client.StopAsync();
         }
 
-        private Process CreateStream(string path)
+        private Process CreateStream(string path, int? startStreamAt = null)
         {
+            StringBuilder sb = new StringBuilder();
+            sb.Append($"-hide_banner -loglevel panic -i \"{path}\" ");
+            if (startStreamAt.HasValue)
+                sb.Append($"-ss {startStreamAt.Value} ");
+            sb.Append("-ac 2 -f s16le -ar 48000 pipe:1");
+
             return Process.Start(new ProcessStartInfo
             {
                 FileName = "ffmpeg",
-                Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
+                //Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
+                Arguments = sb.ToString(),
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
             });
