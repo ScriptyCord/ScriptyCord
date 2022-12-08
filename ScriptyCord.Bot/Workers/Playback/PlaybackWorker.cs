@@ -221,28 +221,29 @@ namespace ScriptCord.Bot.Workers.Playback
 
                 _cancellationTokenSource = new CancellationTokenSource();
 
-                PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, $"PausedAfterSeconds: {_pausedAfterSeconds}"));
                 using (var ffmpeg = CreateStream(currentEntry.Path, _pausedAfterSeconds))
                 using (var stream = _client.CreatePCMStream(AudioApplication.Music))
                 {
                     try
                     {
+                        _startedCurrentEntryAt = DateTime.Now;
+                        if (_pausedAfterSeconds.HasValue)
+                            _startedCurrentEntryAt = _startedCurrentEntryAt - TimeSpan.FromSeconds(_pausedAfterSeconds.Value); 
+                        
                         _pausedAfterSeconds = null;
-                        _startedCurrentEntryAt = DateTime.Now;//.AddSeconds(1); Some kind of offset might be necessary as it goes a bit to the back when unpausing
+
                         await ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream, _cancellationTokenSource.Token);
                     }
                     catch (OperationCanceledException e) 
                     {
                         TimeSpan foo = GetTimeSinceEntryStart();
                         _pausedAfterSeconds = foo.Seconds; 
-                        if (e.Message == "A task was canceled.")
+                        if (e.Message != "A task was canceled.")
                         {
-
-                            PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, $"Possibly web socket is reconnecting. Played current song for {foo.Seconds}. Attempting to restart stream"));
                             _pausePlayback = true;
                             PlaybackWorker.Events.Enqueue(new UnpauseSongEvent(_guildId));
                         }
-                        PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, e.Message));
+                        PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, $"Possibly web socket is reconnecting. Played for: {foo.Seconds}, requested: {_cancellationTokenSource.IsCancellationRequested}. Attempting to restart stream"));
                     }
                     catch (Exception e)
                     {
