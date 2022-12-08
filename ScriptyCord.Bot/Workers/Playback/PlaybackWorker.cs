@@ -243,7 +243,8 @@ namespace ScriptCord.Bot.Workers.Playback
                             _pausePlayback = true;
                             PlaybackWorker.Events.Enqueue(new UnpauseSongEvent(_guildId));
                         }
-                        PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, $"Possibly web socket is reconnecting. Played for: {foo.Seconds}, requested: {_cancellationTokenSource.IsCancellationRequested}. Attempting to restart stream"));
+                        PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, $"{e.Message}. {e.TargetSite}. {e.Source}. Played for: {foo.Seconds}, requested: {_cancellationTokenSource.IsCancellationRequested}. Attempting to restart stream"));
+                        PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, $"{e.StackTrace}"));
                     }
                     catch (Exception e)
                     {
