@@ -24,7 +24,6 @@ namespace ScriptCord.Bot.Commands.Playback
     [Group("playback", "Manages and plays audio in voice channels")]
     public class PlaybackModule : ScriptyCordCommandModule
     {
-        private new readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkRed;
         private readonly ILoggerFacade<PlaybackModule> _logger;
 
         private readonly IPlaylistService _playlistService;
@@ -50,18 +49,18 @@ namespace ScriptCord.Bot.Commands.Playback
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Starting playlback of the specified playlist");
             if (_playbackWorkerService.HasPlaybackSession(Context.Guild.Id))
             {
-                await RespondAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithTitle("Failure").WithDescription("Bot is already playing in your server!").Build());
+                await RespondAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription("Bot is already playing in your server!").Build());
                 return;
             }
 
             IVoiceChannel channel = null;
             channel = channel ?? (Context.User as IGuildUser)?.VoiceChannel;
             
-            EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+            EmbedBuilder embedBuilder = new EmbedBuilder();
             if (channel is null)
-                embedBuilder.WithTitle("Failure").WithDescription("You are not in a voice channel!");
+                embedBuilder.WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription("You are not in a voice channel!");
             else
-                embedBuilder.WithDescription("Joining your voice channel...");
+                embedBuilder.WithColor(Discord.Color.Blue).WithTitle("playback play").WithDescription($"Joining {channel.Name} for playback");
 
             // TODO: First check if already connected to the current voice channel or another one
             await RespondAsync(embed: embedBuilder.Build());
@@ -71,7 +70,7 @@ namespace ScriptCord.Bot.Commands.Playback
                 var shuffledEntriesResult = await _playlistService.GetShuffledEntries(Context.Guild.Id, playlistName, IsUserGuildAdministrator());
                 if (shuffledEntriesResult.IsFailure)
                 {
-                    await FollowupAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithTitle("Playback failure").WithDescription(shuffledEntriesResult.Error).Build());
+                    await FollowupAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Red).WithTitle("Playback failure").WithDescription(shuffledEntriesResult.Error).Build());
                     return;
                 }
 
@@ -87,18 +86,18 @@ namespace ScriptCord.Bot.Commands.Playback
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Stopping playlback in voice chat");
             if (!_playbackWorkerService.HasPlaybackSession(Context.Guild.Id))
             {
-                await RespondAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithTitle("Failure").WithDescription("Bot is not playing in your server!").Build());
+                await RespondAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription("Bot is not playing in your server!").Build());
                 return;
             }
 
             IVoiceChannel channel = null;
             channel = channel ?? (Context.User as IGuildUser)?.VoiceChannel;
 
-            EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+            EmbedBuilder embedBuilder = new EmbedBuilder();
             if (channel is null)
-                embedBuilder.WithTitle("Failure").WithDescription("You are not in a voice channel!");
+                embedBuilder.WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription("You are not in a voice channel!");
             else
-                embedBuilder.WithDescription("Stopping and leaving your voice channel...");
+                embedBuilder.WithColor(Discord.Color.Blue).WithDescription("Stopping and leaving your voice channel...");
 
             await RespondAsync(embed: embedBuilder.Build());
             if (channel is not null)
@@ -114,18 +113,18 @@ namespace ScriptCord.Bot.Commands.Playback
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Pausing playlback in voice chat");
             if (!_playbackWorkerService.HasPlaybackSession(Context.Guild.Id))
             {
-                await RespondAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithTitle("Failure").WithDescription("Bot is not playing in your server!").Build());
+                await RespondAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription("Bot is not playing in your server!").Build());
                 return;
             }
 
             IVoiceChannel channel = null;
             channel = channel ?? (Context.User as IGuildUser)?.VoiceChannel;
 
-            EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+            EmbedBuilder embedBuilder = new EmbedBuilder();
             if (channel is null)
-                embedBuilder.WithTitle("Failure").WithDescription("You are not in a voice channel!");
+                embedBuilder.WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription("You are not in a voice channel!");
             else
-                embedBuilder.WithDescription("Pausing playback...");
+                embedBuilder.WithColor(Discord.Color.Blue).WithTitle("playback pause").WithDescription("Pausing playback");
 
             await RespondAsync(embed: embedBuilder.Build());
             if (channel is not null)
@@ -141,18 +140,18 @@ namespace ScriptCord.Bot.Commands.Playback
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Unpausing playlback in voice chat");
             if (!_playbackWorkerService.HasPlaybackSession(Context.Guild.Id))
             {
-                await RespondAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithTitle("Failure").WithDescription("Bot is not playing in your server!").Build());
+                await RespondAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription("Bot is not playing in your server!").Build());
                 return;
             }
 
             IVoiceChannel channel = null;
             channel = channel ?? (Context.User as IGuildUser)?.VoiceChannel;
 
-            EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+            EmbedBuilder embedBuilder = new EmbedBuilder();
             if (channel is null)
-                embedBuilder.WithTitle("Failure").WithDescription("You are not in a voice channel!");
+                embedBuilder.WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription("You are not in a voice channel!");
             else
-                embedBuilder.WithDescription("Unpausing playback...");
+                embedBuilder.WithColor(Discord.Color.Blue).WithTitle("playback unpause").WithDescription("Unpausing playback");
 
             await RespondAsync(embed: embedBuilder.Build());
             if (channel is not null)
@@ -168,18 +167,18 @@ namespace ScriptCord.Bot.Commands.Playback
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Skipping to next song in voice chat");
             if (!_playbackWorkerService.HasPlaybackSession(Context.Guild.Id))
             {
-                await RespondAsync(embed: new EmbedBuilder().WithColor(_modulesEmbedColor).WithTitle("Failure").WithDescription("Bot is not playing in your server!").Build());
+                await RespondAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription("Bot is not playing in your server!").Build());
                 return;
             }
 
             IVoiceChannel channel = null;
             channel = channel ?? (Context.User as IGuildUser)?.VoiceChannel;
 
-            EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+            EmbedBuilder embedBuilder = new EmbedBuilder();
             if (channel is null)
-                embedBuilder.WithTitle("Failure").WithDescription("You are not in a voice channel!");
+                embedBuilder.WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription("You are not in a voice channel!");
             else
-                embedBuilder.WithDescription("Skipping to next song...");
+                embedBuilder.WithColor(Discord.Color.Blue).WithTitle("playback skip").WithDescription("Skipping to next song");
 
             await RespondAsync(embed: embedBuilder.Build());
             if (channel is not null)
@@ -194,10 +193,10 @@ namespace ScriptCord.Bot.Commands.Playback
         {
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Checking information about currently playing song in voice chat");
             
-            EmbedBuilder embedBuilder = new EmbedBuilder().WithColor(_modulesEmbedColor);
+            EmbedBuilder embedBuilder = new EmbedBuilder();
             var dataResult = await _playlistService.GetCurrentlyPlayingMetadata(Context.Guild.Id);
             if (dataResult.IsFailure)
-                embedBuilder.WithTitle("Failure").WithDescription($"{dataResult.Error}!");
+                embedBuilder.WithColor(Discord.Color.Red).WithTitle("Failure").WithDescription($"{dataResult.Error}!");
             else
             {
                 var data = dataResult.Value;
@@ -207,7 +206,7 @@ namespace ScriptCord.Bot.Commands.Playback
                 string intervalCurrentString = timeSinceStart.ToString(@"mm\:ss");
                 string intervalTotalString = totalTime.ToString(@"mm\:ss");
 
-                embedBuilder.WithTitle("Currently playing")
+                embedBuilder.WithColor(Discord.Color.Blue).WithTitle("Currently playing")
                     .WithDescription($"**{data.Title}** from {data.SourceType} ({intervalCurrentString}/{intervalTotalString})\r\n{data.Url}").WithImageUrl(data.Thumbnail);
             }
 
