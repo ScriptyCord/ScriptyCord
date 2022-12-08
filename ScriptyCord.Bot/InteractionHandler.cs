@@ -20,7 +20,6 @@ namespace ScriptCord.Bot
         private readonly IServiceProvider _services;
         private readonly IConfiguration _configuration;
         private readonly ILoggerFacade<InteractionHandler> _logger;
-        private bool _initialSetupDone = false;
 
         public InteractionHandler(DiscordSocketClient client, InteractionService interactionService, IServiceProvider services, IConfiguration config, ILoggerFacade<InteractionHandler> logger)
         {
@@ -33,24 +32,22 @@ namespace ScriptCord.Bot
 
         public async Task InitializeAsync()
         {
-            //_client.Ready += ReadyAsync;
-            _client.Connected += ReadyAsync;
+            Task registration = RegisterModules();
+            Task workers = RunWorkers();
+            await Task.WhenAll(registration, workers);
+
             _interactionService.Log += LogAsync;
         }
 
         private async Task LogAsync(LogMessage log)
             => await _logger.LogAsync(log);
 
-        private async Task ReadyAsync()
+        private async Task RegisterModules()
         {
-            if (_initialSetupDone)
-                return;
-
             try
             {
                 await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
                 await _interactionService.RegisterCommandsGloballyAsync(true);
-                await _services.GetRequiredService<IPlaybackWorker>().Run();
                 _logger.SetupDiscordLogging(_configuration, _client, "general");
             }
             catch (Exception e)
@@ -61,7 +58,11 @@ namespace ScriptCord.Bot
             }
             
             _client.InteractionCreated += HandleInteraction;
-            _initialSetupDone = true;
+        }
+
+        private async Task RunWorkers()
+        {
+            await _services.GetRequiredService<IPlaybackWorker>().Run();
         }
 
         private async Task HandleInteraction(SocketInteraction interaction)

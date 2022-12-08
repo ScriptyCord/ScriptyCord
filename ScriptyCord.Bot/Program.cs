@@ -56,18 +56,21 @@ namespace ScriptCord.Bot
         private async Task RunAsync()
         {
             IServiceProvider services = _ioc.Build();
-            var config = services.GetRequiredService<IConfiguration>();
             var client = services.GetRequiredService<DiscordSocketClient>();
-            _logger = services.GetRequiredService<ILoggerFacade<Program>>();
+            var config = services.GetRequiredService<IConfiguration>();
+            var token = config.GetSection("discord").GetSection("token").Get<string>();
 
+            _logger = services.GetRequiredService<ILoggerFacade<Program>>();
             client.Log += LogAsync;
+
+            await client.LoginAsync(TokenType.Bot, token);
+            await client.StartAsync();
+
+            while (client.ConnectionState != ConnectionState.Connected)
+                Thread.Sleep(1000);
 
             await services.GetRequiredService<InteractionHandler>()
                 .InitializeAsync();
-
-            var token = config.GetSection("discord").GetSection("token").Get<string>();
-            await client.LoginAsync(TokenType.Bot, token);
-            await client.StartAsync();
 
             Console.CancelKeyPress += delegate
             {
@@ -76,9 +79,6 @@ namespace ScriptCord.Bot
                 services.GetRequiredService<IPlaybackWorker>().Stop();
                 System.Environment.Exit(0);
             };
-
-            while (client.ConnectionState != ConnectionState.Connected)
-                Thread.Sleep(100);
 
             _logger.SetupDiscordLogging(config, client, "general");
             await Task.Delay(Timeout.Infinite);

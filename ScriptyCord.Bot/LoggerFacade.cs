@@ -30,7 +30,7 @@ namespace ScriptCord.Bot
         private Dictionary<LogSeverity, Action<string>> _discordSeverityLogProxy;
 
         private ulong _supportRoleId = 0;
-
+         
         private SocketTextChannel _textChannel = null;
 
         public LoggerFacade()
