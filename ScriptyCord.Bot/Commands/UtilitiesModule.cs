@@ -31,22 +31,26 @@ namespace ScriptyCord.Bot.Commands
             _logger.LogDebug($"[GuildId({Context.Guild.Id}),ChannelId({Context.Channel.Id})]: Rolling a dice");
             if (numberOfDice < 1)
             {
-                await RespondAsync(embed: new EmbedBuilder().WithTitle("Invalid dice amount").WithDescription("You need at least one dice to roll!").Build());
+                await RespondAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Red)
+                    .WithTitle("Invalid dice amount").WithDescription("You need at least one dice to roll!").Build());
                 return;
             }
             else if (numberOfDice > 100)
             {
-                await RespondAsync(embed: new EmbedBuilder().WithTitle("Invalid dice amount").WithDescription("You can't throw more than 100 dice!").Build());
+                await RespondAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Red)
+                    .WithTitle("Invalid dice amount").WithDescription("You can't throw more than 100 dice!").Build());
                 return;
             }
             else if (sides < 2)
             {
-                await RespondAsync(embed: new EmbedBuilder().WithTitle("Invalid sides").WithDescription("You need at least two sides on a dice!").Build());
+                await RespondAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Red)
+                    .WithTitle("Invalid sides").WithDescription("You need at least two sides on a dice!").Build());
                 return;
             }
             else if (sides > 100)
             {
-                await RespondAsync(embed: new EmbedBuilder().WithTitle("Invalid sides").WithDescription("Maximum side size is 100!").Build());
+                await RespondAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Red)
+                    .WithTitle("Invalid sides").WithDescription("Maximum side size is 100!").Build());
                 return;
             }
 
@@ -62,7 +66,7 @@ namespace ScriptyCord.Bot.Commands
             sb.Length -= 2;
             sb.Append($"\r\nFinal Result: {numbers.Sum()}");
 
-            await RespondAsync(embed: new EmbedBuilder().WithTitle("Roll result").WithDescription(sb.ToString()).Build());
+            await RespondAsync(embed: new EmbedBuilder().WithColor(Discord.Color.Blue).WithTitle("Roll result").WithDescription(sb.ToString()).Build());
         }
     }
 }

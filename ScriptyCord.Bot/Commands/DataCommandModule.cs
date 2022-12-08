@@ -19,7 +19,6 @@ namespace ScriptyCord.Bot.Commands
 {
     public class DataCommandModule : ScriptyCordCommandModule
     {
-        private new readonly Discord.Color _modulesEmbedColor = Discord.Color.DarkPurple;
         private readonly ILoggerFacade<DataCommandModule> _logger;
         private readonly IPlaybackWorker _playbackWorker;
 
@@ -46,7 +45,7 @@ namespace ScriptyCord.Bot.Commands
             fields.Add(new EmbedFieldBuilder().WithName("Active voice sessions").WithValue(_playbackWorker.GetPlaybackSessionsCount()));
 
             EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithColor(_modulesEmbedColor)
+                .WithColor(Discord.Color.Blue)
                 .WithTitle($"ScriptyCord Version: {Program.Version}")
                 .WithImageUrl(Context.Client.CurrentUser.GetAvatarUrl())
                 .WithFields(fields);
