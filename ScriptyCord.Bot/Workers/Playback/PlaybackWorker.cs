@@ -229,7 +229,7 @@ namespace ScriptCord.Bot.Workers.Playback
                     }
                     catch (OperationCanceledException e) 
                     {
-                        if (e.Message == "The operation was canceled.")
+                        if (e.Message == "A task was canceled.")
                             PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, $"Possibly web socket is reconnecting. {e.Data}"));
                         PlaybackWorker.EventLogsQueue.Enqueue((NLog.LogLevel.Info, e.Message));
                     }
